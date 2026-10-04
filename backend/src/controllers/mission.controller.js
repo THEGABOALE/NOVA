@@ -6,6 +6,7 @@ const groupRepository = require("../repositories/group.repository");
 const userRepository = require("../repositories/user.repository");
 const { missionStartBlock } = require("../services/mission-access.service");
 const { settleAttempt } = require("../services/attempt-settlement.service");
+const { startFreshAttempt } = require("../services/attempt-start.service");
 const { normalizeTzOffset } = require("../services/streak.service");
 const { loadStreak } = require("../services/streak-query.service");
 const { respondServerError } = require("../utils/server-error");
@@ -124,14 +125,11 @@ const startAttempt = async (req, res) => {
     // de la misma misión abierto a la vez.
     const isReview = await attemptRepository.hasCompletedMission(pool, req.user.id, missionId);
 
-    // El intento anterior de esta misión que quedó abierto ya no se va a cerrar.
-    await attemptRepository.abandonOpenAttempts(pool, req.user.id, missionId);
-
-    const attempt = await attemptRepository.createAttempt(pool, {
-      userId: req.user.id,
-      missionId,
-      isReview
-    });
+    // El intento anterior de esta misión que quedó abierto ya no se va a
+    // cerrar: se marca abandonado y se crea el nuevo en la misma transacción.
+    const attempt = await withTransaction((db) =>
+      startFreshAttempt(db, { userId: req.user.id, missionId, isReview })
+    );
 
     return res.status(201).json({
       message: "Intento iniciado",
