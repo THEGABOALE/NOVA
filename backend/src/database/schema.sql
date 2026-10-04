@@ -125,6 +125,7 @@ CREATE TABLE mission_attempts (
   is_review BOOLEAN DEFAULT FALSE,
   started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   finished_at TIMESTAMP,
+  -- in_progress, completed, failed o abandoned (quedó abierto y se empezó otro).
   status VARCHAR(50) DEFAULT 'in_progress',
   -- Id que genera el teléfono en los intentos jugados sin conexión (modo offline).
   client_attempt_id UUID UNIQUE
@@ -209,3 +210,8 @@ CREATE TABLE student_group_enrollments (
   is_active BOOLEAN DEFAULT TRUE,
   UNIQUE(user_id, group_id)
 );
+
+-- Índices de las consultas por estudiante, por intento y por sala.
+CREATE INDEX idx_mission_attempts_user ON mission_attempts(user_id);
+CREATE INDEX idx_attempt_answers_attempt ON attempt_answers(attempt_id);
+CREATE INDEX idx_enrollments_group ON student_group_enrollments(group_id);

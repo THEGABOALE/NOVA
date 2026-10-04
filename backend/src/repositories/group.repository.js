@@ -20,13 +20,15 @@ const findActiveGroup = async (db, userId) => {
   return result.rows[0] || null;
 };
 
-// El codigo con su sala y su nivel, solo si todavia se puede usar: activo, de
-// una sala activa, sin vencer y sin haber llegado a su limite de usos.
+// El codigo con su sala y su nivel, se pueda usar o no: el servicio
+// (classifyAccessCode) dice por que no sirve, para que el estudiante sepa si
+// lo escribio mal, si vencio o si se acabaron los usos. Si vencio lo calcula
+// la base con su propio reloj, porque expires_at no tiene zona horaria.
 //
 // Deja bloqueada la fila del codigo hasta que termine la transaccion. Si otra
-// matricula la tenia bloqueada, Postgres espera y vuelve a evaluar el WHERE
-// con los usos ya actualizados, asi que nunca se pasa de max_uses.
-const findUsableAccessCode = async (db, code) => {
+// matricula la tenia bloqueada, Postgres espera y devuelve la fila con los
+// usos ya actualizados, asi que nunca se pasa de max_uses.
+const findAccessCode = async (db, code) => {
   const result = await db.query(
     `
     SELECT
@@ -34,6 +36,7 @@ const findUsableAccessCode = async (db, code) => {
       gac.code,
       gac.group_id,
       gac.expires_at,
+      (gac.expires_at IS NOT NULL AND gac.expires_at <= CURRENT_TIMESTAMP) AS is_expired,
       gac.max_uses,
       gac.current_uses,
       gac.is_active AS code_is_active,
@@ -51,10 +54,6 @@ const findUsableAccessCode = async (db, code) => {
     JOIN class_groups cg ON cg.id = gac.group_id
     JOIN educational_levels el ON el.id = cg.level_id
     WHERE gac.code = $1
-      AND gac.is_active = TRUE
-      AND cg.is_active = TRUE
-      AND (gac.expires_at IS NULL OR gac.expires_at > CURRENT_TIMESTAMP)
-      AND (gac.max_uses IS NULL OR gac.current_uses < gac.max_uses)
     LIMIT 1
     FOR UPDATE OF gac;
     `,
@@ -159,12 +158,14 @@ const findGroupsByTeacher = async (db, teacherId) => {
   return result.rows;
 };
 
-// Estudiantes activos de una sala con sus semillas, misiones completadas y
-// cuando y cuanto duro su ultimo intento.
-const findStudentsSummary = async (db, groupId) => {
+// Estudiantes activos de varias salas con sus semillas, misiones completadas
+// y cuando y cuanto duro su ultimo intento. Una fila por estudiante y sala:
+// todas las salas del docente en una sola consulta.
+const findStudentsSummary = async (db, groupIds) => {
   const result = await db.query(
     `
     SELECT
+      sge.group_id,
       u.id,
       u.full_name,
       -- Lo ganado menos lo gastado en potenciadores, igual que ve el estudiante.
@@ -181,31 +182,31 @@ const findStudentsSummary = async (db, groupId) => {
     FROM users u
     JOIN student_group_enrollments sge ON sge.user_id = u.id
     LEFT JOIN mission_attempts a ON a.user_id = u.id
-    WHERE sge.group_id = $1 AND sge.is_active = TRUE AND u.is_active = TRUE
-    GROUP BY u.id, u.full_name
+    WHERE sge.group_id = ANY($1) AND sge.is_active = TRUE AND u.is_active = TRUE
+    GROUP BY sge.group_id, u.id, u.full_name
     ORDER BY u.full_name ASC;
     `,
-    [groupId]
+    [groupIds]
   );
 
   return result.rows;
 };
 
-// Promedio de aciertos de la sala por mecanica, sin contar repasos.
-const findAverageScoreByMechanic = async (db, groupId) => {
+// Promedio de aciertos por sala y mecanica, sin contar repasos.
+const findAverageScoreByMechanic = async (db, groupIds) => {
   const result = await db.query(
     `
-    SELECT m.mechanic, ROUND(AVG(a.score)) AS average_score
+    SELECT sge.group_id, m.mechanic, ROUND(AVG(a.score)) AS average_score
     FROM mission_attempts a
     JOIN missions m ON m.id = a.mission_id
     JOIN student_group_enrollments sge ON sge.user_id = a.user_id
-    WHERE sge.group_id = $1
+    WHERE sge.group_id = ANY($1)
       AND sge.is_active = TRUE
       AND a.status = 'completed'
       AND a.is_review = FALSE
-    GROUP BY m.mechanic;
+    GROUP BY sge.group_id, m.mechanic;
     `,
-    [groupId]
+    [groupIds]
   );
 
   return result.rows;
@@ -247,7 +248,7 @@ module.exports = {
   findAverageScoreByMechanic,
   findCenterRooms,
   findActiveGroup,
-  findUsableAccessCode,
+  findAccessCode,
   findEnrollmentForYear,
   enrollStudent,
   incrementCodeUses

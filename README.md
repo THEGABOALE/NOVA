@@ -136,6 +136,7 @@ También se pueden ejecutar abriendo los archivos en SQLTools, desde VS Code.
 ```bash
 psql "$DATABASE_URL" -f src/database/migrations/2026-10-01-client-attempt-id.sql
 psql "$DATABASE_URL" -f src/database/migrations/2026-10-02-seeds-spent.sql
+psql "$DATABASE_URL" -f src/database/migrations/2026-10-03-indices-y-abandonados.sql
 ```
 
 ### Ejecución

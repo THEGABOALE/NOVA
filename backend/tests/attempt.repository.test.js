@@ -1,4 +1,5 @@
 const {
+  abandonOpenAttempts,
   countPaidReviewsNear,
   findSeedBalance,
   findStudentTotals,
@@ -106,5 +107,24 @@ describe("findStudentTotals", () => {
 
     expect(await findStudentTotals(db, 7)).toEqual({ totalPoints: 150, missionsCompleted: 1 });
     expect(db.calls[0].sql).toContain("SUM(points_earned - seeds_spent)");
+  });
+});
+
+describe("abandonOpenAttempts", () => {
+  test("empezar de nuevo cierra como abandonados los intentos abiertos de esa misión", async () => {
+    const calls = [];
+    const db = {
+      query: async (sql, params) => {
+        calls.push({ sql, params });
+        return { rowCount: 2, rows: [] };
+      }
+    };
+
+    const closed = await abandonOpenAttempts(db, 5, 7);
+
+    expect(closed).toBe(2);
+    expect(calls[0].sql).toContain("status = 'abandoned'");
+    expect(calls[0].sql).toContain("status = 'in_progress'");
+    expect(calls[0].params).toEqual([5, 7]);
   });
 });
