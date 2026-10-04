@@ -407,7 +407,7 @@ private fun MissionRouteRow(
                 }
 
                 Text(
-                    text = "${index + 1}. ${mission.title}",
+                    text = mission.title,
                     color = if (state.isUnlocked) NovaText else NovaTextSecondary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp

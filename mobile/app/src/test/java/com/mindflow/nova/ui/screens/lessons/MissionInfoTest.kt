@@ -63,4 +63,18 @@ class MissionInfoTest {
         assertEquals("Misión", mechanicLabel(null))
         assertEquals("Misión", mechanicLabel("otro"))
     }
+
+    @Test
+    fun `el mapa abre en la misión disponible, contando el encabezado y el orden de abajo hacia arriba`() {
+        // Ítem 0 es el encabezado; después van las misiones de la última a la primera.
+        assertEquals(3, mapScrollIndex(total = 3, currentIndex = 0))
+        assertEquals(2, mapScrollIndex(total = 3, currentIndex = 1))
+        assertEquals(1, mapScrollIndex(total = 3, currentIndex = 2))
+    }
+
+    @Test
+    fun `con todas completadas el mapa abre arriba`() {
+        assertEquals(0, mapScrollIndex(total = 3, currentIndex = -1))
+        assertEquals(0, mapScrollIndex(total = 0, currentIndex = -1))
+    }
 }

@@ -27,6 +27,15 @@ fun computeMissionStates(
 fun currentMissionIndex(states: List<MissionState>): Int =
     states.indexOfFirst { it.isUnlocked && !it.isCompleted }
 
+/**
+ * Ítem de la lista del mapa en el que tiene que abrir: la misión disponible.
+ * El mapa pone el encabezado en el ítem 0 y las misiones de la última a la
+ * primera (la ruta sube), así que la de índice i está en total - i. Sin
+ * misión disponible (todas completadas) abre arriba.
+ */
+internal fun mapScrollIndex(total: Int, currentIndex: Int): Int =
+    if (currentIndex < 0) 0 else total - currentIndex
+
 fun mechanicLabel(mechanic: String?): String = when (mechanic) {
     "multiple_choice" -> "Opción múltiple"
     "matching" -> "Relaciona conceptos"
