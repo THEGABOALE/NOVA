@@ -479,7 +479,7 @@ function App() {
           </p>
 
           <a
-            href="mailto:hola@nova.edu"
+            href="mailto:contacto@novamindflow.com?subject=Quiero%20conocer%20m%C3%A1s%20sobre%20NOVA"
             className="mt-8 inline-flex rounded-full bg-nova-purple px-8 py-4 font-bold text-white transition hover:-translate-y-1 hover:bg-nova-blue"
           >
             Conocer más sobre NOVA
