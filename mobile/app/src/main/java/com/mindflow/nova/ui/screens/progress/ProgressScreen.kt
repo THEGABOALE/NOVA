@@ -37,6 +37,7 @@ import com.mindflow.nova.data.model.StudentProgress
 import com.mindflow.nova.data.model.StudentStreak
 import com.mindflow.nova.ui.components.NovaProgressBar
 import com.mindflow.nova.ui.components.StreakBadge
+import com.mindflow.nova.ui.components.streakMessage
 import com.mindflow.nova.ui.screens.home.levelProgressPercentage
 import com.mindflow.nova.ui.screens.lessons.MissionState
 import com.mindflow.nova.ui.screens.lessons.computeMissionStates
@@ -136,12 +137,14 @@ private fun StreakCard(streak: StudentStreak) {
 
             Spacer(modifier = Modifier.width(14.dp))
 
+            // El marcador ya dice los días; al lado va qué hacer hoy, con el
+            // mismo texto que explica la racha en el Inicio.
             Text(
-                text = streakLine(streak.days),
+                text = streakMessage(streak).body,
                 modifier = Modifier.weight(1f),
                 color = NovaText,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold
+                fontSize = 14.sp,
+                lineHeight = 19.sp
             )
         }
     }

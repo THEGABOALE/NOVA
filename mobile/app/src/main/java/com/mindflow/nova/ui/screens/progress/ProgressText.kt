@@ -6,10 +6,3 @@ internal fun progressHeadline(percentage: Int): String = when {
     percentage >= 100 -> "¡Completaste tu nivel! Repasa cuando quieras."
     else -> "Vas por buen camino: ya completaste el $percentage % de tu nivel."
 }
-
-/** Texto junto a la racha: los días, o una invitación si todavía no tiene. */
-internal fun streakLine(days: Int): String = when {
-    days <= 0 -> "Empieza tu racha completando una misión hoy."
-    days == 1 -> "1 día de racha"
-    else -> "$days días de racha"
-}

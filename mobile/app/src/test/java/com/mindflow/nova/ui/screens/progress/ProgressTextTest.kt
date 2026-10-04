@@ -17,11 +17,4 @@ class ProgressTextTest {
         assertEquals("Tu ruta empieza con la primera misión.", progressHeadline(-5))
         assertEquals("¡Completaste tu nivel! Repasa cuando quieras.", progressHeadline(130))
     }
-
-    @Test
-    fun `la racha se cuenta en singular o plural, y sin días invita a empezar`() {
-        assertEquals("Empieza tu racha completando una misión hoy.", streakLine(0))
-        assertEquals("1 día de racha", streakLine(1))
-        assertEquals("5 días de racha", streakLine(5))
-    }
 }
