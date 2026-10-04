@@ -1,6 +1,7 @@
 const { withTransaction } = require("../database/transaction");
 const groupRepository = require("../repositories/group.repository");
 const userRepository = require("../repositories/user.repository");
+const { classifyAccessCode } = require("../services/access-code.service");
 const { respondServerError } = require("../utils/server-error");
 const { isFilledString } = require("../utils/validation");
 
@@ -28,15 +29,16 @@ const joinGroupByCode = async (req, res) => {
 
       // Bloquea la fila del código hasta el final: si dos estudiantes van por
       // el último uso a la vez, el segundo ve el código ya agotado.
-      const accessCode = await groupRepository.findUsableAccessCode(db, code.trim().toUpperCase());
+      const accessCode = await groupRepository.findAccessCode(db, code.trim().toUpperCase());
 
-      if (!accessCode) {
+      // Un motivo por caso (mal escrito, inactivo, vencido, sin usos): cada uno
+      // se arregla distinto.
+      const problem = classifyAccessCode(accessCode);
+
+      if (problem) {
         return {
           httpStatus: 404,
-          body: {
-            message: "El código no es válido, expiró o alcanzó su límite de usos",
-            status: "ERROR"
-          }
+          body: { message: problem.message, code: problem.code, status: "ERROR" }
         };
       }
 
