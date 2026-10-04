@@ -32,5 +32,5 @@ fun mechanicLabel(mechanic: String?): String = when (mechanic) {
     "matching" -> "Relaciona conceptos"
     "true_false" -> "Verdadero o falso"
     "word_search" -> "Sopa de letras"
-    else -> "Minijuego"
+    else -> "Misión"
 }

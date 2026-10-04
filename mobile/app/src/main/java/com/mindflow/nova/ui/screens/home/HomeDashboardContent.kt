@@ -330,7 +330,7 @@ private fun RouteCompleteCard(onClick: () -> Unit) {
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Repasa las lecciones cuando quieras.",
+                    text = "Repasa las misiones cuando quieras.",
                     color = NovaTextSecondary,
                     fontSize = 13.sp,
                     lineHeight = 18.sp

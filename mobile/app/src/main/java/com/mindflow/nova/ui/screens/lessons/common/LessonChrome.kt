@@ -107,7 +107,7 @@ fun LessonTopBar(
         IconButton(onClick = onClose) {
             Icon(
                 imageVector = Icons.Rounded.Close,
-                contentDescription = "Salir de la lección",
+                contentDescription = "Salir de la misión",
                 tint = NovaText
             )
         }
@@ -171,7 +171,7 @@ fun ExitConfirmationDialog(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Perderás el progreso de esta lección",
+                    text = "Perderás el progreso de esta misión",
                     color = NovaTextSecondary,
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center
@@ -210,7 +210,7 @@ fun LessonCompletedScreen(
     subtitle: String,
     rewardAmount: Int,
     onContinue: () -> Unit,
-    title: String = "¡Nivel completado!",
+    title: String = "¡Misión completada!",
     rewardLabel: String = "semillas",
     streak: AttemptStreak? = null,
     extraContent: (@Composable () -> Unit)? = null,

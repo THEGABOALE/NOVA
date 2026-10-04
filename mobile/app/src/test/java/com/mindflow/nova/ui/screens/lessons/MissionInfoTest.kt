@@ -54,12 +54,13 @@ class MissionInfoTest {
     }
 
     @Test
-    fun `mechanicLabel traduce cada minijuego y cae a un genérico si no lo conoce`() {
+    fun `mechanicLabel traduce cada mecánica y cae a un genérico si no la conoce`() {
         assertEquals("Opción múltiple", mechanicLabel("multiple_choice"))
         assertEquals("Relaciona conceptos", mechanicLabel("matching"))
         assertEquals("Verdadero o falso", mechanicLabel("true_false"))
         assertEquals("Sopa de letras", mechanicLabel("word_search"))
-        assertEquals("Minijuego", mechanicLabel(null))
-        assertEquals("Minijuego", mechanicLabel("otro"))
+        // Una mecánica que la app no conoce se nombra con la palabra del glosario.
+        assertEquals("Misión", mechanicLabel(null))
+        assertEquals("Misión", mechanicLabel("otro"))
     }
 }

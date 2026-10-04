@@ -256,7 +256,7 @@ fun MatchingLessonScreen(
                     title = "¡Se acabó el tiempo!",
                     message = "Completaste ${matchedIds.size} de ${pairs.size} pares antes de que se acabara",
                     zafiroLine = ZafiroLines.TIME_UP,
-                    primaryLabel = "Reintentar minijuego",
+                    primaryLabel = "Reintentar misión",
                     onPrimary = attempt.onRetry,
                     secondaryLabel = "Volver al inicio",
                     onSecondary = onExit,
@@ -267,9 +267,9 @@ fun MatchingLessonScreen(
             MatchingStage.OUT_OF_PLUMAS -> {
                 LessonEndScreen(
                     title = "¡Te quedaste sin plumas!",
-                    message = "Necesitas plumas para seguir en el minijuego",
+                    message = "Necesitas plumas para seguir en la misión",
                     zafiroLine = ZafiroLines.OUT_OF_PLUMAS,
-                    primaryLabel = "Reintentar minijuego",
+                    primaryLabel = "Reintentar misión",
                     onPrimary = attempt.onRetry,
                     secondaryLabel = "Volver al inicio",
                     onSecondary = onExit,

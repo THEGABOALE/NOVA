@@ -296,11 +296,11 @@ private fun NovaBottomNavigation(
             icon = {
                 Icon(
                     imageVector = Icons.Rounded.MenuBook,
-                    contentDescription = "Lecciones"
+                    contentDescription = "Misiones"
                 )
             },
             label = {
-                NavLabel("Lecciones")
+                NavLabel("Misiones")
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = NovaPurple,

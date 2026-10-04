@@ -69,7 +69,7 @@ fun LessonsMapScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Lecciones",
+                text = "Misiones",
                 color = NovaPurple,
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Black

@@ -74,7 +74,7 @@ fun StartLessonDialog(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
-                    text = if (isReplay) "¿Quieres repasar la lección?" else "¿Quieres comenzar la lección?",
+                    text = if (isReplay) "¿Quieres repasar la misión?" else "¿Quieres empezar la misión?",
                     color = NovaText,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
@@ -125,7 +125,7 @@ fun StartLessonDialog(
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     Text(
-                        text = if (isReplay) "Repasar" else "Comenzar",
+                        text = if (isReplay) "Repasar" else "Empezar",
                         fontWeight = FontWeight.Bold
                     )
                 }
