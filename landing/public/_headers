@@ -1,0 +1,16 @@
+# Cabeceras de la landing (Cloudflare Workers Static Assets). Aplican en
+# novamindflow.com, www y workers.dev.
+#
+# La página solo carga lo propio y la tipografía de Fontshare (el CSS viene de
+# api.fontshare.com y las fuentes de cdn.fontshare.com).
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' https://api.fontshare.com; font-src 'self' https://cdn.fontshare.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+# Vite les pone un hash al nombre: cada deploy cambia el archivo, así que se
+# pueden guardar en caché un año sin riesgo de servir una versión vieja.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
