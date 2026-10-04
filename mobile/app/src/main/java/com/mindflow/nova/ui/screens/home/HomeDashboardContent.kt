@@ -73,6 +73,8 @@ import kotlinx.coroutines.delay
 fun HomeDashboardContent(
     level: LevelResponse,
     progress: StudentProgress?,
+    /** Nombre completo del estudiante, para saludarlo por su nombre. */
+    studentName: String?,
     onMissionSelected: (MissionResponse) -> Unit,
     onOpenLessons: () -> Unit,
     modifier: Modifier = Modifier
@@ -110,7 +112,7 @@ fun HomeDashboardContent(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
-            WelcomeBanner()
+            WelcomeBanner(studentName = studentName)
         }
 
         item {
@@ -151,7 +153,7 @@ fun HomeDashboardContent(
 }
 
 @Composable
-private fun WelcomeBanner() {
+private fun WelcomeBanner(studentName: String?) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -167,7 +169,7 @@ private fun WelcomeBanner() {
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "Bienvenido a NOVA",
+                    text = greeting(studentName),
                     fontSize = 25.sp,
                     fontWeight = FontWeight.Black,
                     color = Color.White

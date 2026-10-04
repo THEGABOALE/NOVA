@@ -224,6 +224,7 @@ private fun NovaMainContent(
             HomeDashboardContent(
                 level = level,
                 progress = progress,
+                studentName = user?.fullName,
                 onMissionSelected = onMissionSelected,
                 onOpenLessons = onOpenLessons,
                 modifier = modifier
