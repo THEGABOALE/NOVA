@@ -8,5 +8,16 @@
     "not_found_handling": "single-page-application"
   },
 
+  // Dominio propio (registrado en esta misma cuenta de Cloudflare). Cada deploy
+  // lo mantiene conectado; Cloudflare crea el DNS y el certificado solo.
+  // nova.mindflow16.workers.dev sigue activo como respaldo.
+  "routes": [
+    { "pattern": "novamindflow.com", "custom_domain": true },
+    { "pattern": "www.novamindflow.com", "custom_domain": true }
+  ],
+  // Explícito: con routes, workers.dev podría apagarse por defecto, y las
+  // vistas previas de cada PR lo usan.
+  "workers_dev": true,
+
   "previews": {}
 }
