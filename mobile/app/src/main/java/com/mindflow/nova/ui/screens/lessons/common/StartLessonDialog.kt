@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.mindflow.nova.data.model.MissionResponse
 import com.mindflow.nova.ui.screens.lessons.mechanicLabel
+import com.mindflow.nova.ui.screens.lessons.missionFacts
 import com.mindflow.nova.ui.components.zafiro.ZafiroLines
 import com.mindflow.nova.ui.theme.NovaOnPurple
 import com.mindflow.nova.ui.theme.NovaSurface
@@ -102,6 +103,17 @@ fun StartLessonDialog(
                         textAlign = TextAlign.Center
                     )
                 }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Qué le espera: preguntas, plumas, tiempo y semillas.
+                Text(
+                    text = missionFacts(mission, isReplay).joinToString(" · "),
+                    color = NovaText,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
 

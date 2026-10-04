@@ -22,5 +22,7 @@ data class MissionResponse(
     val timeLimitSeconds: Int?,
     /** Plumas disponibles antes de perder la misión. */
     val maxPlumas: Int?,
-    val isPublished: Boolean
+    val isPublished: Boolean,
+    /** Cuántas preguntas tiene; null si el backend todavía no lo manda. */
+    val questionCount: Int? = null
 )
