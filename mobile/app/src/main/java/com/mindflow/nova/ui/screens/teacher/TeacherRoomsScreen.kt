@@ -47,7 +47,9 @@ import androidx.compose.ui.unit.sp
 import com.mindflow.nova.ui.theme.NovaBackground
 import com.mindflow.nova.ui.theme.NovaBorder
 import com.mindflow.nova.ui.theme.NovaLightPurple
+import com.mindflow.nova.ui.theme.NovaOnPurple
 import com.mindflow.nova.ui.theme.NovaPurple
+import com.mindflow.nova.ui.theme.NovaSurface
 import com.mindflow.nova.ui.theme.NovaText
 import com.mindflow.nova.ui.theme.NovaTextSecondary
 
@@ -128,7 +130,9 @@ private fun SalasListScreen(
                         Text(
                             text = room.name,
                             modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
-                            color = NovaText,
+                            // El pastel de la sala es claro también en modo oscuro:
+                            // el texto va siempre oscuro para que se lea.
+                            color = RoomCardText,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
                         )
@@ -228,7 +232,7 @@ private fun TeacherRoomDetailScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(50.dp),
-                    color = Color.White,
+                    color = NovaSurface,
                     border = BorderStroke(1.dp, NovaBorder)
                 ) {
                     Text(
@@ -253,13 +257,13 @@ private fun TeacherRoomDetailScreen(
                     Surface(
                         modifier = Modifier.clickable { selectedTab = index },
                         shape = RoundedCornerShape(50.dp),
-                        color = if (isSelected) NovaPurple else Color.White,
+                        color = if (isSelected) NovaPurple else NovaSurface,
                         border = if (isSelected) null else BorderStroke(1.dp, NovaBorder)
                     ) {
                         Text(
                             text = label,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                            color = if (isSelected) Color.White else NovaTextSecondary,
+                            color = if (isSelected) NovaOnPurple else NovaTextSecondary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -395,3 +399,6 @@ private fun ResumenList(results: List<MinigameResult>) {
         }
     }
 }
+
+/** Texto sobre el pastel de cada sala, que es claro en los dos temas. */
+private val RoomCardText = Color(0xFF1E1A22)
