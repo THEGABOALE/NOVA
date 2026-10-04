@@ -158,12 +158,14 @@ const findGroupsByTeacher = async (db, teacherId) => {
   return result.rows;
 };
 
-// Estudiantes activos de una sala con sus semillas, misiones completadas y
-// cuando y cuanto duro su ultimo intento.
-const findStudentsSummary = async (db, groupId) => {
+// Estudiantes activos de varias salas con sus semillas, misiones completadas
+// y cuando y cuanto duro su ultimo intento. Una fila por estudiante y sala:
+// todas las salas del docente en una sola consulta.
+const findStudentsSummary = async (db, groupIds) => {
   const result = await db.query(
     `
     SELECT
+      sge.group_id,
       u.id,
       u.full_name,
       -- Lo ganado menos lo gastado en potenciadores, igual que ve el estudiante.
@@ -180,31 +182,31 @@ const findStudentsSummary = async (db, groupId) => {
     FROM users u
     JOIN student_group_enrollments sge ON sge.user_id = u.id
     LEFT JOIN mission_attempts a ON a.user_id = u.id
-    WHERE sge.group_id = $1 AND sge.is_active = TRUE AND u.is_active = TRUE
-    GROUP BY u.id, u.full_name
+    WHERE sge.group_id = ANY($1) AND sge.is_active = TRUE AND u.is_active = TRUE
+    GROUP BY sge.group_id, u.id, u.full_name
     ORDER BY u.full_name ASC;
     `,
-    [groupId]
+    [groupIds]
   );
 
   return result.rows;
 };
 
-// Promedio de aciertos de la sala por mecanica, sin contar repasos.
-const findAverageScoreByMechanic = async (db, groupId) => {
+// Promedio de aciertos por sala y mecanica, sin contar repasos.
+const findAverageScoreByMechanic = async (db, groupIds) => {
   const result = await db.query(
     `
-    SELECT m.mechanic, ROUND(AVG(a.score)) AS average_score
+    SELECT sge.group_id, m.mechanic, ROUND(AVG(a.score)) AS average_score
     FROM mission_attempts a
     JOIN missions m ON m.id = a.mission_id
     JOIN student_group_enrollments sge ON sge.user_id = a.user_id
-    WHERE sge.group_id = $1
+    WHERE sge.group_id = ANY($1)
       AND sge.is_active = TRUE
       AND a.status = 'completed'
       AND a.is_review = FALSE
-    GROUP BY m.mechanic;
+    GROUP BY sge.group_id, m.mechanic;
     `,
-    [groupId]
+    [groupIds]
   );
 
   return result.rows;
