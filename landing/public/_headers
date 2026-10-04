@@ -1,10 +1,12 @@
 # Cabeceras de la landing (Cloudflare Workers Static Assets). Aplican en
 # novamindflow.com, www y workers.dev.
 #
-# La página solo carga lo propio y la tipografía de Fontshare (el CSS viene de
-# api.fontshare.com y las fuentes de cdn.fontshare.com).
+# La página solo carga lo propio, la tipografía de Fontshare (el CSS viene de
+# api.fontshare.com y las fuentes de cdn.fontshare.com) y el script de
+# Cloudflare Web Analytics, que Cloudflare inyecta en el dominio: se carga de
+# static.cloudflareinsights.com y envía las visitas a cloudflareinsights.com.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' https://api.fontshare.com; font-src 'self' https://cdn.fontshare.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' https://api.fontshare.com; font-src 'self' https://cdn.fontshare.com; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
