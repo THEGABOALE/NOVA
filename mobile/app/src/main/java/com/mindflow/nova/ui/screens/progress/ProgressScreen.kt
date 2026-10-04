@@ -25,6 +25,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.mindflow.nova.ui.components.stackStats
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -129,23 +131,34 @@ private fun StreakCard(streak: StudentStreak) {
         color = NovaSurface,
         shadowElevation = 2.dp
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            StreakBadge(streak = streak)
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            // El marcador ya dice los días; al lado va qué hacer hoy, con el
-            // mismo texto que explica la racha en el Inicio.
+        // El marcador ya dice los días; al lado va qué hacer hoy, con el mismo
+        // texto que explica la racha en el Inicio. Con la fuente grande van uno
+        // debajo del otro para que el texto no quede en una columna angosta.
+        val message = @Composable { textModifier: Modifier ->
             Text(
                 text = streakMessage(streak).body,
-                modifier = Modifier.weight(1f),
+                modifier = textModifier,
                 color = NovaText,
                 fontSize = 14.sp,
                 lineHeight = 19.sp
             )
+        }
+
+        if (stackStats(LocalDensity.current.fontScale)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                StreakBadge(streak = streak)
+                Spacer(modifier = Modifier.height(12.dp))
+                message(Modifier.fillMaxWidth())
+            }
+        } else {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StreakBadge(streak = streak)
+                Spacer(modifier = Modifier.width(14.dp))
+                message(Modifier.weight(1f))
+            }
         }
     }
 }
