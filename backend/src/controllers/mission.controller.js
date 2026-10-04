@@ -124,6 +124,9 @@ const startAttempt = async (req, res) => {
     // de la misma misión abierto a la vez.
     const isReview = await attemptRepository.hasCompletedMission(pool, req.user.id, missionId);
 
+    // El intento anterior de esta misión que quedó abierto ya no se va a cerrar.
+    await attemptRepository.abandonOpenAttempts(pool, req.user.id, missionId);
+
     const attempt = await attemptRepository.createAttempt(pool, {
       userId: req.user.id,
       missionId,

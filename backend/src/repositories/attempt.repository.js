@@ -24,6 +24,23 @@ const createAttempt = async (db, { userId, missionId, isReview }) => {
   return result.rows[0];
 };
 
+// Un intento que quedó abierto (se cerró la app, se cortó la red) ya no se
+// puede terminar: al empezar otro de la misma misión se marca abandonado.
+// No suma semillas ni cuenta en la racha ni en las completadas, porque todas
+// esas cuentas filtran por status = 'completed' y no tiene finished_at.
+const abandonOpenAttempts = async (db, userId, missionId) => {
+  const result = await db.query(
+    `
+    UPDATE mission_attempts
+    SET status = 'abandoned'
+    WHERE user_id = $1 AND mission_id = $2 AND status = 'in_progress';
+    `,
+    [userId, missionId]
+  );
+
+  return result.rowCount;
+};
+
 // Cuantos repasos de esta mision ya cobraron a menos de `hours` horas (antes
 // o despues) de `at`, la hora en que se termino el intento que se esta
 // calificando. Sin `at` se usa la hora actual (intento cerrado en linea).
@@ -241,6 +258,7 @@ module.exports = {
   hasCompletedMission,
   countPaidReviewsNear,
   createAttempt,
+  abandonOpenAttempts,
   findAttemptWithMission,
   findByClientAttemptId,
   insertSettledAttempt,
