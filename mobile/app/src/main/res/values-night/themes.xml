@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Con el teléfono en oscuro, el fondo de la ventana es el de la paleta
+         oscura (DarkNovaPalette.background) y no blanco. -->
+    <style name="Theme.NOVA" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#FF15111A</item>
+    </style>
+</resources>

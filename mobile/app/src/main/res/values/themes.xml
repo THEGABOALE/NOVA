@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.NOVA" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.NOVA" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Lo que se ve un instante antes de que Compose dibuje la pantalla. -->
+        <item name="android:windowBackground">#FFFCF8FD</item>
+    </style>
+
+    <!-- Arranque: fondo morado con el pájaro, en vez de un destello blanco. -->
+    <style name="Theme.NOVA.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.NOVA</item>
+    </style>
 </resources>

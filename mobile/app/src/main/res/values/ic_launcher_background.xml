@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Morado de la marca: fondo del ícono y del splash. -->
+    <color name="ic_launcher_background">#82368C</color>
+</resources>
