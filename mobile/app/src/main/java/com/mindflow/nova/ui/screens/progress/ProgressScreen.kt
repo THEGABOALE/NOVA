@@ -1,49 +1,74 @@
 package com.mindflow.nova.ui.screens.progress
 
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mindflow.nova.data.model.LevelResponse
+import com.mindflow.nova.data.model.MissionResponse
 import com.mindflow.nova.data.model.StudentProgress
-import com.mindflow.nova.ui.components.StatPair
+import com.mindflow.nova.data.model.StudentStreak
 import com.mindflow.nova.ui.components.NovaProgressBar
-import com.mindflow.nova.ui.theme.NovaSurface
-import com.mindflow.nova.ui.theme.NovaGold
-import com.mindflow.nova.ui.theme.NovaGoldLight
+import com.mindflow.nova.ui.components.StreakBadge
 import com.mindflow.nova.ui.screens.home.levelProgressPercentage
+import com.mindflow.nova.ui.screens.lessons.MissionState
+import com.mindflow.nova.ui.screens.lessons.computeMissionStates
+import com.mindflow.nova.ui.screens.lessons.currentMissionIndex
+import com.mindflow.nova.ui.theme.NovaBlue
+import com.mindflow.nova.ui.theme.NovaInfoBackground
 import com.mindflow.nova.ui.theme.NovaLightPurple
+import com.mindflow.nova.ui.theme.NovaNeutralCard
 import com.mindflow.nova.ui.theme.NovaPurple
+import com.mindflow.nova.ui.theme.NovaSurface
 import com.mindflow.nova.ui.theme.NovaText
 import com.mindflow.nova.ui.theme.NovaTextSecondary
 
+// Progreso cuenta cómo va la ruta del nivel: la racha, cuánto lleva y en qué
+// estado está cada misión. Las cifras (misiones y semillas) quedan en el
+// Perfil, para no repetirlas. Los logros (insignias por rachas, niveles o
+// repasos) van acá más adelante.
 @Composable
 fun ProgressScreen(
     level: LevelResponse,
-    // Null mientras carga o si no se pudo obtener: se muestran los valores en 0.
+    // Null mientras carga o si no se pudo obtener: se muestra como si no hubiera avance.
     progress: StudentProgress?,
     modifier: Modifier = Modifier
 ) {
-    val progressFraction = (levelProgressPercentage(level, progress) / 100.0).toFloat()
+    val percent = levelProgressPercentage(level, progress).toInt().coerceIn(0, 100)
+    val missionStates = computeMissionStates(level.missions, progress?.completedMissionIds?.toSet().orEmpty())
+    val currentIndex = currentMissionIndex(missionStates)
 
     Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp)
     ) {
         Spacer(modifier = Modifier.height(16.dp))
@@ -56,115 +81,167 @@ fun ProgressScreen(
         )
 
         Text(
-            text = "Resumen de tu avance en NOVA",
+            text = "Tu avance en ${level.name}",
             color = NovaTextSecondary,
             fontSize = 14.sp
         )
 
-        Spacer(modifier = Modifier.height(22.dp))
-
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(26.dp),
-            color = NovaSurface,
-            shadowElevation = 4.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(22.dp)
-            ) {
-                Text(
-                    text = level.name,
-                    color = NovaText,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Has iniciado tu ruta de aprendizaje sobre los derechos, igualdad y dignidad.",
-                    color = NovaTextSecondary,
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp
-                )
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                NovaProgressBar(progress = progressFraction)
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    text = "${(progressFraction * 100).toInt()}% completado",
-                    color = NovaPurple,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-            }
+        progress?.streak?.let { streak ->
+            Spacer(modifier = Modifier.height(18.dp))
+            StreakCard(streak)
         }
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        StatPair(
-            first = { statModifier ->
-                ProgressStatCard(
-                    title = "misiones completadas",
-                    value = progress?.missionsCompleted ?: 0,
-                    modifier = statModifier
-                )
-            },
-            second = { statModifier ->
-                ProgressStatCard(
-                    title = "semillas",
-                    value = progress?.totalPoints ?: 0,
-                    // Dorado en vez de morado: las semillas son la "moneda" del
-                    // juego, conviene que se distingan de una tarjeta mas.
-                    accentColor = NovaGold,
-                    backgroundColor = NovaGoldLight,
-                    modifier = statModifier
+        LevelCard(levelName = level.name, percent = percent)
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Misiones del nivel",
+            color = NovaText,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Black
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            level.missions.forEachIndexed { index, mission ->
+                MissionStatusRow(
+                    mission = mission,
+                    state = missionStates[index],
+                    isCurrent = index == currentIndex
                 )
             }
-        )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
 @Composable
-private fun ProgressStatCard(
-    title: String,
-    value: Int,
-    modifier: Modifier = Modifier,
-    accentColor: Color = NovaPurple,
-    backgroundColor: Color = NovaLightPurple
-) {
-    // Cuenta hacia arriba en vez de aparecer directo en el valor final, para
-    // que la tarjeta se sienta menos estática al cargar el progreso.
-    val animatedValue by animateIntAsState(
-        targetValue = value,
-        animationSpec = tween(durationMillis = 700),
-        label = "statValue"
-    )
-
+private fun StreakCard(streak: StudentStreak) {
     Surface(
-        modifier = modifier,
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = backgroundColor
+        color = NovaSurface,
+        shadowElevation = 2.dp
     ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = animatedValue.toString(),
-                color = accentColor,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Black
-            )
+            StreakBadge(streak = streak)
+
+            Spacer(modifier = Modifier.width(14.dp))
 
             Text(
-                text = title,
-                color = NovaTextSecondary,
-                fontSize = 13.sp
+                text = streakLine(streak.days),
+                modifier = Modifier.weight(1f),
+                color = NovaText,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
 }
+
+@Composable
+private fun LevelCard(levelName: String, percent: Int) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(26.dp),
+        color = NovaSurface,
+        shadowElevation = 4.dp
+    ) {
+        Column(modifier = Modifier.padding(22.dp)) {
+            Text(
+                text = levelName,
+                color = NovaText,
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = progressHeadline(percent),
+                color = NovaTextSecondary,
+                fontSize = 14.sp,
+                lineHeight = 20.sp
+            )
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            NovaProgressBar(progress = percent / 100f)
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "$percent % completado",
+                color = NovaPurple,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun MissionStatusRow(mission: MissionResponse, state: MissionState, isCurrent: Boolean) {
+    // El estado va con ícono y con texto: el color nunca es la única señal.
+    val (icon, label, tint, tileColor) = when {
+        state.isCompleted -> MissionStatusStyle(Icons.Rounded.Check, "Completada", NovaPurple, NovaLightPurple)
+        // Con el desbloqueo en orden, la única desbloqueada sin completar es la actual.
+        state.isUnlocked -> MissionStatusStyle(Icons.Rounded.PlayArrow, "Disponible", NovaBlue, NovaInfoBackground)
+        else -> MissionStatusStyle(Icons.Rounded.Lock, "Bloqueada", NovaTextSecondary, NovaNeutralCard)
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        color = NovaSurface,
+        shadowElevation = if (isCurrent) 3.dp else 1.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(tileColor),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(imageVector = icon, contentDescription = null, tint = tint, modifier = Modifier.size(22.dp))
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = mission.title,
+                    color = if (state.isUnlocked) NovaText else NovaTextSecondary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                )
+
+                Text(
+                    text = label,
+                    color = tint,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp
+                )
+            }
+        }
+    }
+}
+
+private data class MissionStatusStyle(
+    val icon: ImageVector,
+    val label: String,
+    val tint: Color,
+    val tileColor: Color
+)
