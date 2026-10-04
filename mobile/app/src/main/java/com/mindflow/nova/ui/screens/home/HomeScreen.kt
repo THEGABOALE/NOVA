@@ -27,6 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.mindflow.nova.ui.theme.ThemeMode
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -61,8 +62,8 @@ import com.mindflow.nova.ui.theme.NovaTextSecondary
 
 @Composable
 fun HomeScreen(
-    darkMode: Boolean,
-    onDarkModeChange: (Boolean) -> Unit,
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
     onLogout: () -> Unit = {},
     viewModel: StudentHomeViewModel = viewModel()
 ) {
@@ -171,8 +172,8 @@ fun HomeScreen(
                         progress = progress,
                         onMissionSelected = { mission -> pendingMission = mission },
                         onOpenLessons = { selectedTab = NovaTab.Lessons },
-                        darkMode = darkMode,
-                        onDarkModeChange = onDarkModeChange,
+                        themeMode = themeMode,
+                        onThemeModeChange = onThemeModeChange,
                         onLogout = {
                             viewModel.clear()
                             onLogout()
@@ -214,8 +215,8 @@ private fun NovaMainContent(
     progress: StudentProgress?,
     onMissionSelected: (MissionResponse) -> Unit,
     onOpenLessons: () -> Unit,
-    darkMode: Boolean,
-    onDarkModeChange: (Boolean) -> Unit,
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -252,8 +253,8 @@ private fun NovaMainContent(
             ProfileScreen(
                 user = user,
                 progress = progress,
-                darkMode = darkMode,
-                onDarkModeChange = onDarkModeChange,
+                themeMode = themeMode,
+                onThemeModeChange = onThemeModeChange,
                 onLogout = onLogout,
                 modifier = modifier
             )

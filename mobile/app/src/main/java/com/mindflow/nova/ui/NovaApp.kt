@@ -21,6 +21,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.mindflow.nova.ui.theme.isDark
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -81,7 +83,7 @@ private fun routeForUser(user: SessionUser): AppScreen = when (user.role) {
 @Composable
 fun NovaApp(session: SessionRepository, themePreferences: ThemePreferences) {
     var screen by remember { mutableStateOf<AppScreen>(AppScreen.Loading) }
-    var darkMode by remember { mutableStateOf(themePreferences.isDarkMode()) }
+    var themeMode by remember { mutableStateOf(themePreferences.themeMode()) }
     var restoreAttempt by remember { mutableStateOf(0) }
 
     LaunchedEffect(restoreAttempt) {
@@ -93,9 +95,10 @@ fun NovaApp(session: SessionRepository, themePreferences: ThemePreferences) {
         }
     }
 
-    // El modo oscuro solo aplica al área del estudiante: login, onboarding y
-    // docente siguen en claro porque su diseño (wireframe) es solo claro.
-    val darkActive = darkMode && screen is AppScreen.StudentHome
+    // El tema elegido (o el del teléfono) se aplica al estudiante y al docente.
+    // Login y onboarding quedan en claro: su arte de ondas es sobre fondo claro.
+    val themedScreen = screen is AppScreen.StudentHome || screen is AppScreen.TeacherHome
+    val darkActive = themedScreen && isDark(themeMode, isSystemInDarkTheme())
 
     val view = LocalView.current
     SideEffect {
@@ -128,10 +131,10 @@ fun NovaApp(session: SessionRepository, themePreferences: ThemePreferences) {
             )
 
             AppScreen.StudentHome -> HomeScreen(
-                darkMode = darkMode,
-                onDarkModeChange = { enabled ->
-                    darkMode = enabled
-                    themePreferences.setDarkMode(enabled)
+                themeMode = themeMode,
+                onThemeModeChange = { mode ->
+                    themeMode = mode
+                    themePreferences.setThemeMode(mode)
                 },
                 onLogout = {
                     session.logout()

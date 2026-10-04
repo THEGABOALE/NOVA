@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Badge
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.LightMode
@@ -31,10 +32,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.runtime.Composable
+import com.mindflow.nova.ui.theme.ThemeMode
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,12 +52,12 @@ import com.mindflow.nova.data.model.SessionUser
 import com.mindflow.nova.data.model.StudentProgress
 import com.mindflow.nova.ui.components.StatPair
 import com.mindflow.nova.ui.theme.NovaBorder
+import com.mindflow.nova.ui.theme.NovaOnPurple
 import com.mindflow.nova.ui.theme.NovaGold
 import com.mindflow.nova.ui.theme.NovaGoldLight
 import com.mindflow.nova.ui.theme.NovaHeroGradient
 import com.mindflow.nova.ui.theme.NovaLightPurple
 import com.mindflow.nova.ui.theme.NovaPurple
-import com.mindflow.nova.ui.theme.NovaSoftPurple
 import com.mindflow.nova.ui.theme.NovaSurface
 import com.mindflow.nova.ui.theme.NovaText
 import com.mindflow.nova.ui.theme.NovaTextSecondary
@@ -64,8 +67,8 @@ fun ProfileScreen(
     // Null mientras carga o si no se pudo obtener la cuenta.
     user: SessionUser?,
     progress: StudentProgress?,
-    darkMode: Boolean,
-    onDarkModeChange: (Boolean) -> Unit,
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
     modifier: Modifier = Modifier,
     onLogout: () -> Unit = {}
 ) {
@@ -118,7 +121,7 @@ fun ProfileScreen(
 
         user?.let { AccountInfoCard(it) }
 
-        AppearanceCard(darkMode = darkMode, onDarkModeChange = onDarkModeChange)
+        AppearanceCard(themeMode = themeMode, onThemeModeChange = onThemeModeChange)
 
         OutlinedButton(
             onClick = onLogout,
@@ -322,8 +325,16 @@ private fun InfoRow(row: InfoRowData) {
 }
 
 @Composable
-private fun AppearanceCard(darkMode: Boolean, onDarkModeChange: (Boolean) -> Unit) {
+private fun AppearanceCard(themeMode: ThemeMode, onThemeModeChange: (ThemeMode) -> Unit) {
     SectionTitle("Apariencia")
+
+    // "Sistema" sigue al teléfono, que es lo que se espera por defecto; "Claro"
+    // y "Oscuro" lo fijan aunque el teléfono cambie.
+    val options = listOf(
+        ThemeMode.SYSTEM to "Sistema",
+        ThemeMode.LIGHT to "Claro",
+        ThemeMode.DARK to "Oscuro"
+    )
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -331,42 +342,54 @@ private fun AppearanceCard(darkMode: Boolean, onDarkModeChange: (Boolean) -> Uni
         color = NovaSurface,
         shadowElevation = 2.dp
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconTile(icon = if (darkMode) Icons.Rounded.DarkMode else Icons.Rounded.LightMode)
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Modo oscuro",
-                    color = NovaText,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold
+        Column(modifier = Modifier.padding(18.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconTile(
+                    icon = when (themeMode) {
+                        ThemeMode.SYSTEM -> Icons.Rounded.BrightnessAuto
+                        ThemeMode.LIGHT -> Icons.Rounded.LightMode
+                        ThemeMode.DARK -> Icons.Rounded.DarkMode
+                    }
                 )
 
-                Text(
-                    text = if (darkMode) "Activado" else "Desactivado",
-                    color = NovaTextSecondary,
-                    fontSize = 12.sp
-                )
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Tema",
+                        color = NovaText,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    Text(
+                        text = "Cómo se ve NOVA",
+                        color = NovaTextSecondary,
+                        fontSize = 12.sp
+                    )
+                }
             }
 
-            Switch(
-                checked = darkMode,
-                onCheckedChange = onDarkModeChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = NovaPurple,
-                    uncheckedThumbColor = NovaTextSecondary,
-                    uncheckedTrackColor = NovaSoftPurple,
-                    uncheckedBorderColor = NovaBorder
-                )
-            )
+            Spacer(modifier = Modifier.height(14.dp))
+
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                options.forEachIndexed { index, (mode, label) ->
+                    SegmentedButton(
+                        selected = themeMode == mode,
+                        onClick = { onThemeModeChange(mode) },
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                        colors = SegmentedButtonDefaults.colors(
+                            activeContainerColor = NovaPurple,
+                            activeContentColor = NovaOnPurple,
+                            activeBorderColor = NovaPurple,
+                            inactiveContainerColor = NovaSurface,
+                            inactiveContentColor = NovaText,
+                            inactiveBorderColor = NovaBorder
+                        ),
+                        label = { Text(text = label, maxLines = 1) }
+                    )
+                }
+            }
         }
     }
 }
