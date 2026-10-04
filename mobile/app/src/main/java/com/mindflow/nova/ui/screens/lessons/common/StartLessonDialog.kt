@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -21,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.mindflow.nova.data.model.MissionResponse
 import com.mindflow.nova.ui.screens.lessons.mechanicLabel
+import com.mindflow.nova.ui.screens.lessons.missionFacts
 import com.mindflow.nova.ui.components.zafiro.ZafiroLines
 import com.mindflow.nova.ui.theme.NovaOnPurple
 import com.mindflow.nova.ui.theme.NovaSurface
@@ -63,9 +66,12 @@ fun StartLessonDialog(
             color = NovaSurface,
             shadowElevation = 6.dp
         ) {
+            // Con la fuente grande el diálogo no entra en la pantalla: se desplaza
+            // para que "Empezar" y "Ahora no" siempre se alcancen.
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -74,7 +80,7 @@ fun StartLessonDialog(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
-                    text = if (isReplay) "¿Quieres repasar la lección?" else "¿Quieres comenzar la lección?",
+                    text = if (isReplay) "¿Quieres repasar la misión?" else "¿Quieres empezar la misión?",
                     color = NovaText,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
@@ -103,6 +109,17 @@ fun StartLessonDialog(
                     )
                 }
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Qué le espera: preguntas, plumas, tiempo y semillas.
+                Text(
+                    text = missionFacts(mission, isReplay).joinToString(" · "),
+                    color = NovaText,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
+                )
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
@@ -125,7 +142,7 @@ fun StartLessonDialog(
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     Text(
-                        text = if (isReplay) "Repasar" else "Comenzar",
+                        text = if (isReplay) "Repasar" else "Empezar",
                         fontWeight = FontWeight.Bold
                     )
                 }

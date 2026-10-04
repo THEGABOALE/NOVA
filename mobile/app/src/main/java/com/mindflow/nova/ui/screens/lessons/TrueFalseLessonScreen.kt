@@ -156,9 +156,9 @@ fun TrueFalseLessonScreen(
             TruthStage.OUT_OF_PLUMAS -> {
                 LessonEndScreen(
                     title = "¡Te quedaste sin plumas!",
-                    message = "Necesitas plumas para seguir en la lección",
+                    message = "Necesitas plumas para seguir en la misión",
                     zafiroLine = ZafiroLines.OUT_OF_PLUMAS,
-                    primaryLabel = "Reintentar nivel",
+                    primaryLabel = "Reintentar misión",
                     onPrimary = attempt.onRetry,
                     secondaryLabel = "Volver al inicio",
                     onSecondary = onExit

@@ -5,8 +5,8 @@ import okhttp3.Response
 
 /**
  * Agrega "Authorization: Bearer <token>" a cada petición cuando hay sesión
- * abierta. Las rutas públicas (niveles, unirse por código, health) funcionan
- * igual sin token, así que no hace falta distinguirlas acá.
+ * abierta. Las únicas rutas sin sesión son el login y health, y no les molesta
+ * llevar el token, así que no hace falta distinguirlas acá.
  *
  * Si la petición ya trae su propio Authorization (la subida de intentos, que
  * va con el token de la cuenta dueña de la cola) se respeta.

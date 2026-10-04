@@ -44,7 +44,7 @@ fun MiniGamePlaceholderScreen(
     ) {
         Column {
             Text(
-                text = "Minijuego",
+                text = "Misión en construcción",
                 color = NovaPurple,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Black
@@ -62,7 +62,7 @@ fun MiniGamePlaceholderScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = mission.description ?: "Pantalla reservada para el desarrollo del minijuego.",
+                text = mission.description ?: "Esta misión todavía está en construcción.",
                 color = NovaTextSecondary,
                 fontSize = 15.sp,
                 lineHeight = 22.sp
@@ -84,7 +84,7 @@ fun MiniGamePlaceholderScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Área en blanco para minijuego",
+                        text = "Pronto vas a poder jugarla aquí.",
                         color = NovaTextSecondary,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
@@ -103,7 +103,7 @@ fun MiniGamePlaceholderScreen(
             shape = RoundedCornerShape(20.dp)
         ) {
             Text(
-                text = "Volver a lecciones",
+                text = "Volver a misiones",
                 fontWeight = FontWeight.Bold
             )
         }

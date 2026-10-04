@@ -2,6 +2,7 @@ package com.mindflow.nova.ui.screens.lessons
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
@@ -161,9 +162,9 @@ fun LessonPlayScreen(
             LessonStage.OUT_OF_PLUMAS -> {
                 LessonEndScreen(
                     title = "¡Te quedaste sin plumas!",
-                    message = "Necesitas plumas para seguir en la lección",
+                    message = "Necesitas plumas para seguir en la misión",
                     zafiroLine = ZafiroLines.OUT_OF_PLUMAS,
-                    primaryLabel = "Reintentar nivel",
+                    primaryLabel = "Reintentar misión",
                     onPrimary = attempt.onRetry,
                     secondaryLabel = "Volver al inicio",
                     onSecondary = onExit
@@ -321,10 +322,14 @@ private fun AnswerOptionRow(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Anillo vacío si no está elegida y relleno si sí: antes todas
+            // tenían el círculo lleno y parecían marcadas.
             Box(
                 modifier = Modifier
-                    .size(14.dp)
-                    .background(if (isSelected) NovaOnText else NovaTextSecondary, CircleShape)
+                    .size(18.dp)
+                    .border(2.dp, if (isSelected) NovaOnText else NovaTextSecondary, CircleShape)
+                    .padding(4.dp)
+                    .background(if (isSelected) NovaOnText else Color.Transparent, CircleShape)
             )
 
             Spacer(modifier = Modifier.width(14.dp))

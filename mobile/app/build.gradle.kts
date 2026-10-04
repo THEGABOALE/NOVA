@@ -77,6 +77,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
+    // Splash del sistema con el ícono en todas las versiones desde minSdk 24.
+    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation(libs.androidx.lifecycle.runtime.ktx)
     // ViewModel de las pantallas: guarda el estado y coordina las llamadas al backend.
     implementation(libs.androidx.lifecycle.viewmodel.compose)

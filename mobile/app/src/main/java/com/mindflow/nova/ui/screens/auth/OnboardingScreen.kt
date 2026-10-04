@@ -55,6 +55,7 @@ import com.mindflow.nova.ui.components.zafiro.ZafiroIllustration
 import com.mindflow.nova.ui.components.zafiro.ZafiroLines
 import com.mindflow.nova.ui.components.zafiro.ZafiroPose
 import com.mindflow.nova.ui.theme.NovaBackground
+import com.mindflow.nova.ui.theme.NovaError
 import com.mindflow.nova.ui.theme.NovaLoginButton
 import com.mindflow.nova.ui.theme.NovaLoginFieldBorder
 import com.mindflow.nova.ui.theme.NovaPurple
@@ -116,7 +117,7 @@ private fun WelcomePage(onNext: () -> Unit) {
         Spacer(modifier = Modifier.height(48.dp))
 
         Text(
-            text = "Bienvenido a NOVA",
+            text = "Te damos la bienvenida a NOVA",
             color = NovaText,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -216,6 +217,8 @@ private fun AccessCodePage(
             placeholder = { Text("Insertar código", color = NovaTextSecondary, fontSize = 14.sp) },
             singleLine = true,
             enabled = !isLoading,
+            // En rojo mientras se muestra el motivo por el que el código no sirve.
+            isError = errorMessage != null,
             shape = RoundedCornerShape(8.dp)
         )
 
@@ -223,7 +226,7 @@ private fun AccessCodePage(
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = errorMessage ?: "",
-                color = Color(0xFFB3261E),
+                color = NovaError,
                 fontSize = 13.sp
             )
         }

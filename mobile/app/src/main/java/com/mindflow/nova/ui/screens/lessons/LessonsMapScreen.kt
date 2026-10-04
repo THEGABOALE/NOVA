@@ -22,6 +22,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material3.Icon
+import androidx.compose.ui.platform.LocalDensity
+import com.mindflow.nova.ui.components.stackStats
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,8 +65,13 @@ fun LessonsMapScreen(
     val total = missions.size
     val missionStates = computeMissionStates(missions, completedMissionIds)
     val currentIndex = currentMissionIndex(missionStates)
+    // La ruta sube y lo bloqueado queda arriba: el mapa abre en la misión disponible.
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = mapScrollIndex(total, currentIndex)
+    )
 
     LazyColumn(
+        state = listState,
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 20.dp),
@@ -69,7 +81,7 @@ fun LessonsMapScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Lecciones",
+                text = "Misiones",
                 color = NovaPurple,
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Black
@@ -116,6 +128,68 @@ private fun LessonPathNodeRow(
 ) {
     val alignRight = index % 2 == 1
 
+    val node = @Composable {
+        Box(
+            modifier = Modifier
+                .width(92.dp)
+                .height(142.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (index < total - 1) {
+                VerticalConnector(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .height(48.dp)
+                )
+            }
+
+            if (index > 0) {
+                VerticalConnector(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .height(48.dp)
+                )
+            }
+
+            LessonPathNode(
+                number = index + 1,
+                isCompleted = isCompleted,
+                isCurrent = isCurrent,
+                isLocked = isLocked,
+                onClick = if (!isLocked) {
+                    { onMissionSelected(mission) }
+                } else {
+                    null
+                }
+            )
+        }
+    }
+
+    val card = @Composable { cardModifier: Modifier ->
+        LessonPathInfoCard(
+            mission = mission,
+            isCompleted = isCompleted,
+            isCurrent = isCurrent,
+            isLocked = isLocked,
+            modifier = cardModifier
+        )
+    }
+
+    // Con la fuente grande, la tarjeta al lado del nodo queda tan angosta que
+    // corta palabras ("Completad-a"): el nodo va arriba y la tarjeta debajo.
+    if (stackStats(LocalDensity.current.fontScale)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            node()
+            card(Modifier.fillMaxWidth())
+        }
+        return
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -123,60 +197,12 @@ private fun LessonPathNodeRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = if (alignRight) Arrangement.End else Arrangement.Start
     ) {
-        val node = @Composable {
-            Box(
-                modifier = Modifier
-                    .width(92.dp)
-                    .height(142.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                if (index < total - 1) {
-                    VerticalConnector(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .height(48.dp)
-                    )
-                }
-
-                if (index > 0) {
-                    VerticalConnector(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .height(48.dp)
-                    )
-                }
-
-                LessonPathNode(
-                    number = index + 1,
-                    isCompleted = isCompleted,
-                    isCurrent = isCurrent,
-                    isLocked = isLocked,
-                    onClick = if (!isLocked) {
-                        { onMissionSelected(mission) }
-                    } else {
-                        null
-                    }
-                )
-            }
-        }
-
-        val card = @Composable {
-            LessonPathInfoCard(
-                mission = mission,
-                index = index,
-                isCompleted = isCompleted,
-                isCurrent = isCurrent,
-                isLocked = isLocked,
-                modifier = Modifier.weight(1f)
-            )
-        }
-
         if (alignRight) {
-            card()
+            card(Modifier.weight(1f))
             node()
         } else {
             node()
-            card()
+            card(Modifier.weight(1f))
         }
     }
 }
@@ -228,23 +254,36 @@ private fun LessonPathNode(
             },
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = when {
-                isCompleted -> "✓"
-                isLocked -> "•"
-                else -> "%02d".format(number)
-            },
-            color = Color.White,
-            fontSize = if (isCurrent) 24.sp else 20.sp,
-            fontWeight = FontWeight.Black
-        )
+        // Mismos íconos que la ruta del Inicio: check si está hecha, candado si
+        // todavía no se puede jugar, y el número solo en la que toca.
+        when {
+            isCompleted -> Icon(
+                imageVector = Icons.Rounded.Check,
+                contentDescription = "Misión completada",
+                tint = Color.White,
+                modifier = Modifier.size(if (isCurrent) 30.dp else 26.dp)
+            )
+
+            isLocked -> Icon(
+                imageVector = Icons.Rounded.Lock,
+                contentDescription = "Misión bloqueada",
+                tint = Color.White,
+                modifier = Modifier.size(24.dp)
+            )
+
+            else -> Text(
+                text = "%02d".format(number),
+                color = Color.White,
+                fontSize = if (isCurrent) 24.sp else 20.sp,
+                fontWeight = FontWeight.Black
+            )
+        }
     }
 }
 
 @Composable
 private fun LessonPathInfoCard(
     mission: MissionResponse,
-    index: Int,
     isCompleted: Boolean,
     isCurrent: Boolean,
     isLocked: Boolean,
@@ -294,7 +333,7 @@ private fun LessonPathInfoCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "${index + 1}. ${mission.title}",
+                text = mission.title,
                 color = if (isLocked) NovaTextSecondary else NovaText,
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp

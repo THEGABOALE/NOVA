@@ -4,8 +4,6 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.verticalScroll
@@ -23,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
@@ -42,11 +39,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.painterResource
+import com.mindflow.nova.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -80,15 +77,15 @@ const val LESSON_SEMILLAS_REWARD = 50
 
 @Composable
 fun PlumasIndicator(plumas: Int, maxPlumas: Int = LESSON_MAX_PLUMAS) {
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
         repeat(maxPlumas) { index ->
-            val filled = index < plumas
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .clip(CircleShape)
-                    .background(if (filled) NovaPurple else Color.Transparent)
-                    .border(1.5.dp, NovaPurple, CircleShape)
+            // Las que quedan van llenas; las perdidas, apagadas. Con forma de
+            // pluma para que se reconozcan como las vidas de la misión.
+            Icon(
+                painter = painterResource(R.drawable.ic_pluma),
+                contentDescription = null,
+                tint = if (index < plumas) NovaPurple else NovaPurple.copy(alpha = 0.25f),
+                modifier = Modifier.size(18.dp)
             )
         }
     }
@@ -107,7 +104,7 @@ fun LessonTopBar(
         IconButton(onClick = onClose) {
             Icon(
                 imageVector = Icons.Rounded.Close,
-                contentDescription = "Salir de la lección",
+                contentDescription = "Salir de la misión",
                 tint = NovaText
             )
         }
@@ -171,7 +168,7 @@ fun ExitConfirmationDialog(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Perderás el progreso de esta lección",
+                    text = "Perderás el progreso de esta misión",
                     color = NovaTextSecondary,
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center
@@ -210,7 +207,7 @@ fun LessonCompletedScreen(
     subtitle: String,
     rewardAmount: Int,
     onContinue: () -> Unit,
-    title: String = "¡Nivel completado!",
+    title: String = "¡Misión completada!",
     rewardLabel: String = "semillas",
     streak: AttemptStreak? = null,
     extraContent: (@Composable () -> Unit)? = null,

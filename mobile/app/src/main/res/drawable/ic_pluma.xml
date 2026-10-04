@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pluma de las vidas de la misión: la hoja con el raquis recortado y el cañón.
+     Va en negro; la pantalla le pone el color con tint. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M20.6,3.4C15.2,3.6 9.7,7.2 7.9,13.4L6.9,17.1l3.7,-1C16.8,14.3 20.4,8.8 20.6,3.4ZM8.6,15.6L19.1,4.9l0.3,0.3L8.9,15.9Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M3.4,20.6l5.4,-5.4" />
+</vector>
