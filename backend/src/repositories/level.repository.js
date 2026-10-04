@@ -20,7 +20,9 @@ const findLevelsWithMissions = async (db) => {
       m.mechanic,
       m.time_limit_seconds,
       m.max_plumas,
-      m.is_published
+      m.is_published,
+      -- Cuantas preguntas tiene, para el dialogo de inicio de la mision.
+      (SELECT COUNT(*) FROM questions q WHERE q.mission_id = m.id) AS question_count
     FROM educational_levels el
     LEFT JOIN missions m
       ON m.level_id = el.id
