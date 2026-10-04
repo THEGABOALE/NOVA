@@ -103,9 +103,9 @@ fun NovaApp(session: SessionRepository, themePreferences: ThemePreferences) {
     val view = LocalView.current
     SideEffect {
         val window = (view.context as? Activity)?.window ?: return@SideEffect
-        // Sobre las pantallas con arte oscuro (login/onboarding) los iconos de la
-        // barra de estado van claros; sobre las demás, oscuros en claro y claros en oscuro.
-        val lightIcons = screen is AppScreen.Login || screen is AppScreen.Onboarding || darkActive
+        // Sobre el arte oscuro del login los iconos de la barra de estado van claros;
+        // sobre las demás (el onboarding tiene fondo claro), oscuros en claro y claros en oscuro.
+        val lightIcons = screen is AppScreen.Login || darkActive
         WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !lightIcons
     }
 
