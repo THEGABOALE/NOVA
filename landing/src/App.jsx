@@ -140,7 +140,10 @@ function LearningPreview() {
   ];
 
   return (
-    <div className="relative">
+    <figure
+      className="relative"
+      aria-label="Ejemplo de una ruta de aprendizaje en NOVA"
+    >
       <div className="absolute -left-8 -top-8 h-20 w-20 text-nova-purple/20 nova-float">
         <NovaSpark />
       </div>
@@ -156,9 +159,9 @@ function LearningPreview() {
               Tu aventura
             </p>
 
-            <h3 className="font-display mt-2 text-3xl text-nova-ink">
+            <p className="font-display mt-2 text-3xl text-nova-ink">
               Mi ruta de aprendizaje
-            </h3>
+            </p>
           </div>
 
           <span className="rounded-full bg-nova-purple/10 px-4 py-2 text-xs font-bold text-nova-purple">
@@ -222,13 +225,20 @@ function LearningPreview() {
           </div>
         </div>
       </div>
-    </div>
+    </figure>
   );
 }
 
 function App() {
   return (
-    <main className="min-h-screen bg-nova-mist text-nova-ink">
+    <div className="min-h-screen bg-nova-mist text-nova-ink">
+      <a
+        href="#contenido"
+        className="sr-only rounded-full bg-white px-5 py-3 font-bold text-nova-purple focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60]"
+      >
+        Saltar al contenido
+      </a>
+
       {/* NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-nova-purple/10 bg-nova-mist/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-[88rem] items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
@@ -268,228 +278,236 @@ function App() {
         </div>
       </header>
 
-      {/* HERO */}
-      <section id="inicio" className="relative overflow-hidden">
-        <div className="absolute right-4 top-12 h-20 w-20 text-nova-purple/15 nova-float">
-          <NovaSpark />
-        </div>
-
-        <div className="mx-auto grid w-full max-w-[88rem] items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_1fr] lg:gap-14 lg:px-8 lg:py-16">
-          <div>
-            <p className="eyebrow mb-5 text-nova-purple">
-              Aprende · juega · descubre
-            </p>
-
-            <h1 className="font-display max-w-3xl text-6xl leading-[0.96] text-nova-ink sm:text-7xl lg:text-[5.5rem]">
-              Cada reto puede enseñarte{" "}
-              <span className="text-nova-purple">
-                algo para la vida.
-              </span>
-            </h1>
-
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-nova-body sm:text-[1.3rem]">
-              Explora misiones, supera desafíos y aprende sobre igualdad,
-              respeto y dignidad mientras avanzas junto a Zafiro.
-            </p>
-
-            <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row">
-              <a
-                href="#aventura"
-                className="rounded-full bg-nova-purple px-8 py-4 font-bold text-white transition hover:-translate-y-1 hover:bg-nova-blue"
-              >
-                Comenzar la aventura
-              </a>
-
-              <a
-                href="#descubre"
-                className="rounded-full border-2 border-nova-purple px-8 py-4 font-bold text-nova-purple transition hover:bg-nova-purple hover:text-white"
-              >
-                Descubrir NOVA
-              </a>
-            </div>
-
-            <div className="mt-7 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-nova-blue text-white">
-                ✦
-              </span>
-
-              <p className="text-sm font-bold text-nova-purple">
-                Una forma diferente de aprender, pensar y participar.
-              </p>
-            </div>
+      <main id="contenido">
+        {/* HERO */}
+        <section id="inicio" className="relative overflow-hidden">
+          <div className="absolute right-4 top-12 h-20 w-20 text-nova-purple/15 nova-float">
+            <NovaSpark />
           </div>
 
-          <LearningPreview />
-        </div>
-      </section>
-
-      {/* CÓMO SE VIVE NOVA */}
-      <section
-        id="aventura"
-        className="mx-auto w-full max-w-[88rem] px-4 py-14 sm:px-6 lg:px-8 lg:py-16"
-      >
-        <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
-          <div>
-            <p className="eyebrow text-nova-purple">
-              Así se vive NOVA
-            </p>
-
-            <h2 className="font-display mt-4 text-5xl leading-none text-nova-ink sm:text-6xl lg:text-[4.2rem]">
-              Una misión.
-              <br />
-              Un reto.
-              <br />
-              Algo nuevo que aprender.
-            </h2>
-
-            <div className="mt-8 h-24 w-full max-w-xs text-nova-purple/25">
-              <NovaDoodle />
-            </div>
-          </div>
-
-          <div className="divide-y-2 divide-nova-purple/10 border-y-2 border-nova-purple/10">
-            {steps.map((step) => (
-              <article
-                key={step.number}
-                className="grid gap-4 py-6 sm:grid-cols-[70px_0.8fr_1fr] sm:items-start sm:gap-6"
-              >
-                <span className="font-display text-4xl text-nova-purple">
-                  {step.number}
-                </span>
-
-                <h3 className="font-display text-xl text-nova-ink">
-                  {step.title}
-                </h3>
-
-                <p className="leading-7 text-nova-muted">
-                  {step.text}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* DESCUBRE */}
-      <section id="descubre" className="py-14 sm:py-16">
-        <div className="mx-auto w-full max-w-[88rem] px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl">
-            <p className="eyebrow text-nova-purple">
-              Descubre mientras avanzas
-            </p>
-
-            <h2 className="font-display mt-4 text-5xl leading-none text-nova-ink sm:text-6xl lg:text-[4.2rem]">
-              Aprender puede sentirse como superar una misión.
-            </h2>
-
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-nova-muted">
-              En NOVA cada actividad tiene un propósito: pensar, elegir,
-              comprender y descubrir cómo nuestras decisiones también pueden
-              transformar lo que nos rodea.
-            </p>
-          </div>
-
-          <div className="feature-grid mt-10 grid overflow-hidden rounded-[2rem] border-2 border-nova-purple/10 sm:grid-cols-2">
-            {features.map((feature) => (
-              <article
-                key={feature.number}
-                className="reveal-card border-b-2 border-nova-purple/10 p-6 sm:border-b-0 sm:border-r-2 sm:p-7"
-              >
-                <span className="font-display text-3xl text-nova-purple/60">
-                  {feature.number}
-                </span>
-
-                <h3 className="font-display mt-5 text-2xl text-nova-ink">
-                  {feature.title}
-                </h3>
-
-                <p className="mt-3 leading-7 text-nova-muted">
-                  {feature.text}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ZAFIRO */}
-      <section
-        id="zafiro"
-        className="relative overflow-hidden py-14 sm:py-16"
-      >
-        <div className="absolute right-6 top-8 h-24 w-24 text-nova-purple/15 nova-pulse">
-          <NovaSpark />
-        </div>
-
-        <div className="mx-auto grid w-full max-w-[88rem] items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
-          <div>
-            <p className="eyebrow text-nova-purple">
-              Tu compañero de ruta
-            </p>
-
-            <h2 className="font-display mt-4 text-5xl leading-none text-nova-ink sm:text-6xl lg:text-[4.2rem]">
-              No tienes que recorrer el camino solo.
-            </h2>
-
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-nova-muted">
-              Zafiro te acompaña durante las actividades, te orienta cuando
-              aparece un nuevo reto y celebra contigo cada paso que completas.
-            </p>
-          </div>
-
-          <div className="relative flex min-h-[320px] items-center justify-center rounded-[3rem] bg-nova-purple px-7 py-10 text-center text-white">
-            <div className="absolute left-10 top-10 h-14 w-14 text-white/20 nova-float">
-              <NovaSpark />
-            </div>
-
+          <div className="mx-auto grid w-full max-w-[88rem] items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_1fr] lg:gap-14 lg:px-8 lg:py-16">
             <div>
-              <NovaMark className="mx-auto h-28 w-28 text-white" />
+              <h1 className="font-display max-w-3xl text-6xl leading-[0.96] text-nova-ink sm:text-7xl lg:text-[5.5rem]">
+                <span className="eyebrow mb-5 block text-nova-purple">
+                  NOVA · aprendizaje gamificado sobre igualdad y respeto
+                </span>
 
-              <p className="font-display mt-6 text-3xl">
-                ¡Vamos, puedes hacerlo!
+                <span className="block">
+                  Cada reto puede enseñarte{" "}
+                  <span className="text-nova-purple">
+                    algo para la vida.
+                  </span>
+                </span>
+              </h1>
+
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-nova-body sm:text-[1.3rem]">
+                Explora misiones, supera desafíos y aprende sobre igualdad,
+                respeto y dignidad mientras avanzas junto a Zafiro. Para
+                estudiantes de primaria alta y secundaria.
               </p>
 
-              <p className="mx-auto mt-3 max-w-sm text-white/75">
-                Cada misión superada es una nueva oportunidad para aprender.
+              <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row">
+                <a
+                  href="#aventura"
+                  className="rounded-full bg-nova-purple px-8 py-4 font-bold text-white transition hover:-translate-y-1 hover:bg-nova-blue"
+                >
+                  Comenzar la aventura
+                </a>
+
+                <a
+                  href="#descubre"
+                  className="rounded-full border-2 border-nova-purple px-8 py-4 font-bold text-nova-purple transition hover:bg-nova-purple hover:text-white"
+                >
+                  Descubrir NOVA
+                </a>
+              </div>
+
+              <div className="mt-7 flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-nova-blue text-white"
+                >
+                  ✦
+                </span>
+
+                <p className="text-sm font-bold text-nova-purple">
+                  Una forma diferente de aprender, pensar y participar.
+                </p>
+              </div>
+            </div>
+
+            <LearningPreview />
+          </div>
+        </section>
+
+        {/* CÓMO SE VIVE NOVA */}
+        <section
+          id="aventura"
+          className="mx-auto w-full max-w-[88rem] px-4 py-14 sm:px-6 lg:px-8 lg:py-16"
+        >
+          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
+            <div>
+              <p className="eyebrow text-nova-purple">
+                Así se vive NOVA
               </p>
+
+              <h2 className="font-display mt-4 text-5xl leading-none text-nova-ink sm:text-6xl lg:text-[4.2rem]">
+                Una misión.
+                <br />
+                Un reto.
+                <br />
+                Algo nuevo que aprender.
+              </h2>
+
+              <div className="mt-8 h-24 w-full max-w-xs text-nova-purple/25">
+                <NovaDoodle />
+              </div>
+            </div>
+
+            <div className="divide-y-2 divide-nova-purple/10 border-y-2 border-nova-purple/10">
+              {steps.map((step) => (
+                <article
+                  key={step.number}
+                  className="grid gap-4 py-6 sm:grid-cols-[70px_0.8fr_1fr] sm:items-start sm:gap-6"
+                >
+                  <span className="font-display text-4xl text-nova-purple">
+                    {step.number}
+                  </span>
+
+                  <h3 className="font-display text-xl text-nova-ink">
+                    {step.title}
+                  </h3>
+
+                  <p className="leading-7 text-nova-muted">
+                    {step.text}
+                  </p>
+                </article>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CIERRE */}
-      <section id="comenzar" className="py-14 sm:py-16">
-        <div className="mx-auto w-full max-w-[72rem] px-4 text-center sm:px-6 lg:px-8">
-          <div className="mx-auto h-14 w-14 text-nova-purple nova-pulse">
-            <NovaMark className="h-14 w-14 text-nova-purple" />
+        {/* DESCUBRE */}
+        <section id="descubre" className="py-14 sm:py-16">
+          <div className="mx-auto w-full max-w-[88rem] px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl">
+              <p className="eyebrow text-nova-purple">
+                Descubre mientras avanzas
+              </p>
+
+              <h2 className="font-display mt-4 text-5xl leading-none text-nova-ink sm:text-6xl lg:text-[4.2rem]">
+                Aprender puede sentirse como superar una misión.
+              </h2>
+
+              <p className="mt-5 max-w-3xl text-lg leading-8 text-nova-muted">
+                En NOVA cada actividad tiene un propósito: pensar, elegir,
+                comprender y descubrir cómo nuestras decisiones también pueden
+                transformar lo que nos rodea.
+              </p>
+            </div>
+
+            <div className="feature-grid mt-10 grid overflow-hidden rounded-[2rem] border-2 border-nova-purple/10 sm:grid-cols-2">
+              {features.map((feature) => (
+                <article
+                  key={feature.number}
+                  className="reveal-card border-b-2 border-nova-purple/10 p-6 sm:border-b-0 sm:border-r-2 sm:p-7"
+                >
+                  <span className="font-display text-3xl text-nova-purple/75">
+                    {feature.number}
+                  </span>
+
+                  <h3 className="font-display mt-5 text-2xl text-nova-ink">
+                    {feature.title}
+                  </h3>
+
+                  <p className="mt-3 leading-7 text-nova-muted">
+                    {feature.text}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ZAFIRO */}
+        <section
+          id="zafiro"
+          className="relative overflow-hidden py-14 sm:py-16"
+        >
+          <div className="absolute right-6 top-8 h-24 w-24 text-nova-purple/15 nova-pulse">
+            <NovaSpark />
           </div>
 
-          <p className="eyebrow mt-6 text-nova-purple">
-            NOVA
-          </p>
+          <div className="mx-auto grid w-full max-w-[88rem] items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
+            <div>
+              <p className="eyebrow text-nova-purple">
+                Tu compañero de ruta
+              </p>
 
-          <h2 className="font-display mx-auto mt-4 max-w-5xl text-5xl leading-none text-nova-ink sm:text-7xl">
-            Aprende. Avanza. Transforma.
-          </h2>
+              <h2 className="font-display mt-4 text-5xl leading-none text-nova-ink sm:text-6xl lg:text-[4.2rem]">
+                No tienes que recorrer el camino solo.
+              </h2>
 
-          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-nova-muted">
-            Una experiencia creada para aprender jugando, reflexionar sobre
-            situaciones reales y descubrir que cada decisión también puede
-            enseñarnos algo.
-          </p>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-nova-muted">
+                Zafiro te acompaña durante las actividades, te orienta cuando
+                aparece un nuevo reto y celebra contigo cada paso que completas.
+              </p>
+            </div>
 
-          <a
-            href="mailto:contacto@novamindflow.com?subject=Quiero%20conocer%20m%C3%A1s%20sobre%20NOVA"
-            className="mt-8 inline-flex rounded-full bg-nova-purple px-8 py-4 font-bold text-white transition hover:-translate-y-1 hover:bg-nova-blue"
-          >
-            Conocer más sobre NOVA
-          </a>
+            <div className="relative flex min-h-[320px] items-center justify-center rounded-[3rem] bg-nova-purple px-7 py-10 text-center text-white">
+              <div className="absolute left-10 top-10 h-14 w-14 text-white/20 nova-float">
+                <NovaSpark />
+              </div>
 
-          <p className="mt-4 text-sm text-nova-purple">
-            ¿Eres docente o representas una institución? Conversemos.
-          </p>
-        </div>
-      </section>
+              <div>
+                <NovaMark className="mx-auto h-28 w-28 text-white" />
+
+                <p className="font-display mt-6 text-3xl">
+                  ¡Vamos, puedes hacerlo!
+                </p>
+
+                <p className="mx-auto mt-3 max-w-sm text-white/75">
+                  Cada misión superada es una nueva oportunidad para aprender.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CIERRE */}
+        <section id="comenzar" className="py-14 sm:py-16">
+          <div className="mx-auto w-full max-w-[72rem] px-4 text-center sm:px-6 lg:px-8">
+            <div className="mx-auto h-14 w-14 text-nova-purple nova-pulse">
+              <NovaMark className="h-14 w-14 text-nova-purple" />
+            </div>
+
+            <p className="eyebrow mt-6 text-nova-purple">
+              NOVA
+            </p>
+
+            <h2 className="font-display mx-auto mt-4 max-w-5xl text-5xl leading-none text-nova-ink sm:text-7xl">
+              Aprende. Avanza. Transforma.
+            </h2>
+
+            <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-nova-muted">
+              Una experiencia creada para aprender jugando, reflexionar sobre
+              situaciones reales y descubrir que cada decisión también puede
+              enseñarnos algo.
+            </p>
+
+            <a
+              href="mailto:contacto@novamindflow.com?subject=Quiero%20conocer%20m%C3%A1s%20sobre%20NOVA"
+              className="mt-8 inline-flex rounded-full bg-nova-purple px-8 py-4 font-bold text-white transition hover:-translate-y-1 hover:bg-nova-blue"
+            >
+              Conocer más sobre NOVA
+            </a>
+
+            <p className="mt-4 text-sm text-nova-purple">
+              ¿Eres docente o representas una institución? Conversemos.
+            </p>
+          </div>
+        </section>
+      </main>
 
       <footer className="border-t border-nova-purple/10 px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto flex w-full max-w-[88rem] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -501,7 +519,7 @@ function App() {
           </p>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }
 
