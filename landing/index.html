@@ -4,29 +4,72 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- seo:inicio · scripts/prerender.js reemplaza este bloque en la página 404 -->
     <title>NOVA | Aprende, avanza y transforma</title>
     <meta
       name="description"
       content="Explora misiones, supera retos y aprende sobre igualdad, respeto y dignidad junto a NOVA."
     />
-    <meta name="theme-color" content="#82368c" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://novamindflow.com/" />
 
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
-    <!-- Vista previa al compartir el enlace (WhatsApp, redes, etc.) -->
+    <!-- Vista previa al compartir el enlace (WhatsApp, Facebook, LinkedIn, Discord, X) -->
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_NI" />
     <meta property="og:site_name" content="NOVA" />
-    <meta property="og:title" content="NOVA | Aprende, avanza y transforma" />
+    <meta property="og:url" content="https://novamindflow.com/" />
+    <meta
+      property="og:title"
+      content="NOVA | Aprende, avanza y transforma"
+    />
     <meta
       property="og:description"
       content="Explora misiones, supera retos y aprende sobre igualdad, respeto y dignidad junto a NOVA."
     />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://novamindflow.com/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="NOVA: cada reto puede enseñarte algo para la vida. Aprende, avanza y transforma."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="NOVA | Aprende, avanza y transforma"
+    />
+    <meta
+      name="twitter:description"
+      content="Explora misiones, supera retos y aprende sobre igualdad, respeto y dignidad junto a NOVA."
+    />
+    <meta name="twitter:image" content="https://novamindflow.com/og-image.png" />
+    <meta
+      name="twitter:image:alt"
+      content="NOVA: cada reto puede enseñarte algo para la vida. Aprende, avanza y transforma."
+    />
 
-    <!-- Chillax (tipografía de títulos), licencia gratuita de Fontshare -->
+    <!-- Datos estructurados: el nombre del sitio que Google muestra en los resultados -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "NOVA",
+        "url": "https://novamindflow.com/",
+        "inLanguage": "es",
+        "description": "Explora misiones, supera retos y aprende sobre igualdad, respeto y dignidad junto a NOVA."
+      }
+    </script>
+    <!-- seo:fin -->
+
+    <meta name="theme-color" content="#82368c" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Chillax (tipografía de títulos), licencia gratuita de Fontshare. El CSS
+         viene de api.fontshare.com y los archivos de fuente de cdn.fontshare.com. -->
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
     <link
       rel="stylesheet"
       href="https://api.fontshare.com/v2/css?f[]=chillax@600&display=swap"
@@ -34,6 +77,7 @@
   </head>
 
   <body>
+    <!-- scripts/prerender.js mete aquí el HTML de la portada al compilar -->
     <div id="root"></div>
 
     <script type="module" src="/src/main.jsx"></script>

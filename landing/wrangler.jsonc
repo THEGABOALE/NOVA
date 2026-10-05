@@ -5,7 +5,9 @@
 
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    // Una ruta que no existe responde 404 con dist/404.html (scripts/prerender.js).
+    // Antes respondía 200 con la portada, y Google lo marca como "soft 404".
+    "not_found_handling": "404-page"
   },
 
   // Dominio propio (registrado en esta misma cuenta de Cloudflare). Cada deploy
