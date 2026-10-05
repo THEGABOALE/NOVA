@@ -25,6 +25,12 @@ html {
   scroll-behavior: smooth;
 }
 
+/* El navbar es fijo (unos 73 px): al saltar a una sección por su ancla, el
+   título queda debajo de él y no escondido detrás. */
+section[id] {
+  scroll-margin-top: 6rem;
+}
+
 body {
   margin: 0;
   background: var(--color-nova-mist);
