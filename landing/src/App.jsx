@@ -287,16 +287,14 @@ function App() {
 
           <div className="mx-auto grid w-full max-w-[88rem] items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_1fr] lg:gap-14 lg:px-8 lg:py-16">
             <div>
-              <h1 className="font-display max-w-3xl text-6xl leading-[0.96] text-nova-ink sm:text-7xl lg:text-[5.5rem]">
-                <span className="eyebrow mb-5 block text-nova-purple">
-                  NOVA · aprendizaje gamificado sobre igualdad y respeto
-                </span>
+              <p className="eyebrow mb-5 text-nova-purple">
+                Aprende · juega · descubre
+              </p>
 
-                <span className="block">
-                  Cada reto puede enseñarte{" "}
-                  <span className="text-nova-purple">
-                    algo para la vida.
-                  </span>
+              <h1 className="font-display max-w-3xl text-6xl leading-[0.96] text-nova-ink sm:text-7xl lg:text-[5.5rem]">
+                Cada reto puede enseñarte{" "}
+                <span className="text-nova-purple">
+                  algo para la vida.
                 </span>
               </h1>
 
