@@ -1,0 +1,5 @@
+# NOVA · https://novamindflow.com
+User-agent: *
+Allow: /
+
+Sitemap: https://novamindflow.com/sitemap.xml
