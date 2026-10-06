@@ -58,7 +58,7 @@ function Footer() {
     <footer className="border-t border-nova-purple/10">
       <nav
         aria-label="Pie de página"
-        className="mx-auto grid w-full max-w-[88rem] grid-cols-2 gap-x-8 gap-y-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-8 lg:py-14"
+        className="mx-auto grid w-full max-w-[72rem] grid-cols-2 gap-x-8 gap-y-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-x-10 lg:px-8 lg:py-14"
       >
         <div className="col-span-2 lg:col-span-1">
           <NovaLogo />
@@ -99,7 +99,7 @@ function Footer() {
       </nav>
 
       <div className="border-t border-nova-purple/10">
-        <div className="mx-auto flex w-full max-w-[88rem] flex-col gap-4 px-4 py-6 text-sm text-nova-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-[72rem] flex-col gap-4 px-4 py-6 text-sm text-nova-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>© 2026 NOVA · MindFlow</p>
 
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
