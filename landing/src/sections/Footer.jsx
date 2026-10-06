@@ -58,9 +58,9 @@ function Footer() {
     <footer className="border-t border-nova-purple/10">
       <nav
         aria-label="Pie de página"
-        className="mx-auto grid w-full max-w-[72rem] grid-cols-2 gap-x-8 gap-y-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-x-10 lg:px-8 lg:py-14"
+        className="mx-auto flex w-full max-w-[88rem] flex-col gap-12 px-4 py-14 sm:px-6 lg:flex-row lg:justify-between lg:gap-16 lg:px-8 lg:py-16"
       >
-        <div className="col-span-2 lg:col-span-1">
+        <div className="max-w-sm">
           <NovaLogo />
 
           <p className="font-display mt-5 text-xl text-nova-ink">
@@ -81,25 +81,27 @@ function Footer() {
           </Button>
         </div>
 
-        {columns.map((column) => (
-          <div key={column.title}>
-            <h2 className="eyebrow text-nova-purple">
-              {column.title}
-            </h2>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 sm:gap-x-12 lg:gap-x-16 xl:gap-x-20">
+          {columns.map((column) => (
+            <div key={column.title}>
+              <h2 className="eyebrow text-nova-purple">
+                {column.title}
+              </h2>
 
-            <ul className="mt-4 space-y-3 text-sm text-nova-body">
-              {column.links.map((link) => (
-                <li key={link.label}>
-                  <FooterLink {...link} />
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+              <ul className="mt-4 space-y-3 text-sm text-nova-body">
+                {column.links.map((link) => (
+                  <li key={link.label}>
+                    <FooterLink {...link} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </nav>
 
       <div className="border-t border-nova-purple/10">
-        <div className="mx-auto flex w-full max-w-[72rem] flex-col gap-4 px-4 py-6 text-sm text-nova-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-[88rem] flex-col gap-4 px-4 py-6 text-sm text-nova-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>© 2026 NOVA · MindFlow</p>
 
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
