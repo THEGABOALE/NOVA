@@ -60,14 +60,14 @@ function Footer() {
         aria-label="Pie de página"
         className="mx-auto flex w-full max-w-[88rem] flex-col gap-12 px-4 py-14 sm:px-6 lg:flex-row lg:justify-between lg:gap-16 lg:px-8 lg:py-16"
       >
-        <div className="max-w-sm">
+        <div className="max-w-md">
           <NovaLogo />
 
           <p className="font-display mt-5 text-xl text-nova-ink">
             Aprende. Avanza. Transforma.
           </p>
 
-          <p className="mt-3 max-w-sm text-sm leading-6 text-nova-muted">
+          <p className="mt-3 text-sm leading-6 text-nova-muted">
             Una experiencia educativa para aprender sobre igualdad,
             dignidad, respeto y derechos de una forma diferente.
           </p>
@@ -81,7 +81,7 @@ function Footer() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 sm:gap-x-12 lg:gap-x-16 xl:gap-x-20">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-[repeat(3,minmax(9rem,auto))] sm:gap-x-12 xl:gap-x-20 2xl:gap-x-28">
           {columns.map((column) => (
             <div key={column.title}>
               <h2 className="eyebrow text-nova-purple">
