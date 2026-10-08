@@ -90,7 +90,7 @@ En la app, las pantallas leen el estado de su ViewModel con `StateFlow`, y el Vi
 ```bash
 git clone https://github.com/THEGABOALE/NOVA.git
 cd NOVA/backend
-npm install
+pnpm install
 ```
 
 ### Variables de entorno
@@ -142,9 +142,9 @@ psql "$DATABASE_URL" -f src/database/migrations/2026-10-03-indices-y-abandonados
 ### Ejecución
 
 ```bash
-npm run dev     # con recarga automática (nodemon)
-npm start       # modo normal
-npm test        # tests con Jest
+pnpm run dev     # con recarga automática (nodemon)
+pnpm start       # modo normal
+pnpm test        # tests con Jest
 ```
 
 La API queda en `http://localhost:3000`, o en el puerto definido en `.env`.
@@ -271,7 +271,7 @@ Estas credenciales son solo para desarrollo local.
 
 GitHub Actions corre tres trabajos en cada push y en cada PR hacia `main`:
 
-- **Backend:** `npm test`.
+- **Backend:** `pnpm test`.
 - **Móvil:** `./gradlew testDebugUnitTest`.
 - **Landing:** `npm run lint` y `npm run build`.
 

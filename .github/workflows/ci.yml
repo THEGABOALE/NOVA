@@ -18,14 +18,19 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - uses: pnpm/action-setup@v4
+        with:
+           version: 12.10.1
+           run_install: false
+
       - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: backend/pnpm-lock.json
 
-      - run: npm ci
-      - run: npm test
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
 
   mobile-tests:
     name: Mobile (tests unitarios)
