@@ -1,6 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
+  "packageManager": "pnpm@12.10.1",
   "description": "",
   "main": "src/server.js",
   "scripts": {
