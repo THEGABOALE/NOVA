@@ -58,16 +58,16 @@ function Footer() {
     <footer className="border-t border-nova-purple/10">
       <nav
         aria-label="Pie de página"
-        className="mx-auto grid w-full max-w-[88rem] grid-cols-2 gap-x-8 gap-y-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-8 lg:py-14"
+        className="mx-auto flex w-full max-w-[88rem] flex-col gap-12 px-4 py-14 sm:px-6 lg:flex-row lg:justify-between lg:gap-16 lg:px-8 lg:py-16"
       >
-        <div className="col-span-2 lg:col-span-1">
+        <div className="max-w-md">
           <NovaLogo />
 
           <p className="font-display mt-5 text-xl text-nova-ink">
             Aprende. Avanza. Transforma.
           </p>
 
-          <p className="mt-3 max-w-sm text-sm leading-6 text-nova-muted">
+          <p className="mt-3 text-sm leading-6 text-nova-muted">
             Una experiencia educativa para aprender sobre igualdad,
             dignidad, respeto y derechos de una forma diferente.
           </p>
@@ -81,21 +81,23 @@ function Footer() {
           </Button>
         </div>
 
-        {columns.map((column) => (
-          <div key={column.title}>
-            <h2 className="eyebrow text-nova-purple">
-              {column.title}
-            </h2>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-[repeat(3,minmax(9rem,auto))] sm:gap-x-12 xl:gap-x-20 2xl:gap-x-28">
+          {columns.map((column) => (
+            <div key={column.title}>
+              <h2 className="eyebrow text-nova-purple">
+                {column.title}
+              </h2>
 
-            <ul className="mt-4 space-y-3 text-sm text-nova-body">
-              {column.links.map((link) => (
-                <li key={link.label}>
-                  <FooterLink {...link} />
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+              <ul className="mt-4 space-y-3 text-sm text-nova-body">
+                {column.links.map((link) => (
+                  <li key={link.label}>
+                    <FooterLink {...link} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </nav>
 
       <div className="border-t border-nova-purple/10">
