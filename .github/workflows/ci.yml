@@ -10,27 +10,28 @@ on:
 
 jobs:
   backend-tests:
-    name: Backend (tests)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v7
+  name: Backend (tests)
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: backend
 
-      - uses: pnpm/action-setup@v4
-        with:
-           version: 12.10.1
-           run_install: false
+  steps:
+    - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: backend/pnpm-lock.json
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 12.10.1
+        run_install: false
 
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test
+    - uses: actions/setup-node@v7
+      with:
+        node-version: "22"
+        cache: "pnpm"
+        cache-dependency-path: backend/pnpm-lock.yaml
+
+    - run: pnpm install --frozen-lockfile
+    - run: pnpm test
 
   mobile-tests:
     name: Mobile (tests unitarios)
