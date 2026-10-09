@@ -34,7 +34,7 @@ function Zafiro() {
           </div>
 
           <div>
-            <NovaMark className="mx-auto h-28 w-28 text-white" />
+            <NovaMark className="mx-auto h-28 w-28" />
 
             <p className="font-display mt-6 text-3xl">
               ¡Vamos, puedes hacerlo!

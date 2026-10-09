@@ -43,11 +43,11 @@ function Features() {
           </p>
         </div>
 
-        <div className="feature-grid mt-10 grid overflow-hidden rounded-[2rem] border-2 border-nova-purple/10 sm:grid-cols-2">
+        <div className="mt-10 grid overflow-hidden rounded-[2rem] border-2 border-nova-purple/10 sm:grid-cols-2">
           {features.map((feature) => (
             <article
               key={feature.number}
-              className="reveal-card border-b-2 border-nova-purple/10 p-6 sm:border-b-0 sm:border-r-2 sm:p-7"
+              className="reveal-card border-b-2 border-nova-purple/10 p-6 last:border-b-0 sm:border-b-0 sm:p-7 sm:odd:border-r-2 sm:[&:nth-child(-n+2)]:border-b-2"
             >
               <span className="font-display text-3xl text-nova-purple/75">
                 {feature.number}

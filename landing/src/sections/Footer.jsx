@@ -3,8 +3,8 @@ import NovaLogo from "../components/NovaLogo.jsx";
 import { CONTACT_HREF, SECTIONS, contactHref } from "../config/navigation.js";
 
 // Lo que no tiene `href` todavía no existe (secciones para docentes,
-// instituciones, FAQ, páginas legales): se muestra como texto, sin enlace,
-// hasta que se cree.
+// instituciones, FAQ, páginas legales): se muestra como texto atenuado, sin
+// enlace, hasta que se cree.
 const columns = [
   {
     title: "Producto",
@@ -42,11 +42,14 @@ const legal = [
 
 function FooterLink({ label, href }) {
   if (!href) {
-    return <span>{label}</span>;
+    return <span className="inline-block py-1 text-nova-muted">{label}</span>;
   }
 
   return (
-    <a href={href} className="transition hover:text-nova-purple">
+    <a
+      href={href}
+      className="inline-block py-1 underline-offset-4 transition hover:text-nova-purple hover:underline"
+    >
       {label}
     </a>
   );
@@ -87,7 +90,7 @@ function Footer() {
                 {column.title}
               </h2>
 
-              <ul className="mt-4 space-y-3 text-sm text-nova-body">
+              <ul className="mt-3 space-y-1 text-sm text-nova-body">
                 {column.links.map((link) => (
                   <li key={link.label}>
                     <FooterLink {...link} />
@@ -103,7 +106,7 @@ function Footer() {
         <div className="mx-auto flex w-full max-w-[88rem] flex-col gap-4 px-4 py-6 text-sm text-nova-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>© 2026 NOVA · MindFlow</p>
 
-          <ul className="flex flex-wrap gap-x-6 gap-y-2">
+          <ul className="flex flex-wrap gap-x-6 gap-y-1">
             {legal.map((link) => (
               <li key={link.label}>
                 <FooterLink {...link} />

@@ -6,9 +6,7 @@ function FinalCTA() {
   return (
     <section id={SECTIONS.comenzar} className="py-14 sm:py-16">
       <div className="mx-auto w-full max-w-[72rem] px-4 text-center sm:px-6 lg:px-8">
-        <div className="mx-auto h-14 w-14 text-nova-purple nova-pulse">
-          <NovaMark className="h-14 w-14 text-nova-purple" />
-        </div>
+        <NovaMark className="nova-pulse mx-auto h-14 w-14" />
 
         <p className="eyebrow mt-6 text-nova-purple">
           NOVA
