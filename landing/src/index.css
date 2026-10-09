@@ -125,17 +125,6 @@ button:focus-visible {
   animation: novaPulse 4s ease-in-out infinite;
 }
 
-.reveal-card {
-  transition:
-    transform 220ms ease,
-    border-color 220ms ease,
-    background-color 220ms ease;
-}
-
-.reveal-card:hover {
-  transform: translateY(-5px);
-}
-
 /* Quien pidió menos movimiento en su sistema no ve las animaciones decorativas. */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -146,11 +135,5 @@ button:focus-visible {
   .nova-float-reverse,
   .nova-pulse {
     animation: none;
-  }
-
-  .reveal-card,
-  .reveal-card:hover {
-    transition: none;
-    transform: none;
   }
 }

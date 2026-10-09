@@ -67,7 +67,7 @@ function LearningPreview() {
             {missions.map((mission) => (
               <article
                 key={mission.number}
-                className={`reveal-card rounded-[1.4rem] border-2 p-4 ${
+                className={`rounded-[1.4rem] border-2 p-4 ${
                   mission.active
                     ? "border-nova-blue bg-nova-blue text-white"
                     : "border-nova-purple/10 bg-white text-nova-ink"

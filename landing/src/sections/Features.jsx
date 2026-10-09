@@ -47,7 +47,7 @@ function Features() {
           {features.map((feature) => (
             <article
               key={feature.number}
-              className="reveal-card border-b-2 border-nova-purple/10 p-6 last:border-b-0 sm:border-b-0 sm:p-7 sm:odd:border-r-2 sm:[&:nth-child(-n+2)]:border-b-2"
+              className="border-b-2 border-nova-purple/10 p-6 last:border-b-0 sm:border-b-0 sm:p-7 sm:odd:border-r-2 sm:[&:nth-child(-n+2)]:border-b-2"
             >
               <span className="font-display text-3xl text-nova-purple/75">
                 {feature.number}

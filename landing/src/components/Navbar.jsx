@@ -32,6 +32,19 @@ function Navbar() {
   const buttonRef = useRef(null);
   const close = () => setOpen(false);
 
+  // Al pasar a escritorio (`md`, 48rem) el panel queda oculto por `md:hidden`:
+  // se cierra para que no reaparezca abierto al volver al teléfono. No se
+  // devuelve el foco porque en escritorio el botón tampoco se ve.
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 48rem)");
+    const onChange = (event) => {
+      if (event.matches) setOpen(false);
+    };
+
+    desktop.addEventListener("change", onChange);
+    return () => desktop.removeEventListener("change", onChange);
+  }, []);
+
   // Escape cierra el menú y devuelve el foco al botón que lo abrió.
   useEffect(() => {
     if (!open) return undefined;
