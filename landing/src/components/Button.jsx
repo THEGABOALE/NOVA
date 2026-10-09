@@ -10,11 +10,11 @@ const STYLES = {
     "rounded-full border-2 border-nova-purple px-8 py-4 font-bold text-nova-purple transition hover:bg-nova-purple hover:text-white",
 };
 
-function Button({ href, variant = "primary", size = "md", className = "", children }) {
+function Button({ href, variant = "primary", size = "md", className = "", children, ...props }) {
   const style = STYLES[`${variant}-${size}`];
 
   return (
-    <a href={href} className={className ? `${className} ${style}` : style}>
+    <a href={href} className={className ? `${className} ${style}` : style} {...props}>
       {children}
     </a>
   );
