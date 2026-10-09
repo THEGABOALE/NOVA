@@ -1,0 +1,12 @@
+# Instalación de dependencias en Railway (Nixpacks).
+#
+# Por defecto Nixpacks activa pnpm con corepack@0.24.1, que busca el programa en
+# bin/pnpm.cjs. Desde pnpm 11 el paquete trae bin/pnpm.mjs y un binario nativo,
+# así que con pnpm 12 el build falla con "Cannot find module .../pnpm.cjs".
+# Aquí pnpm se instala con npm, en la versión exacta de "packageManager" de
+# package.json, y se llama por su ruta para no usar el pnpm 9 que trae Nix.
+[phases.install]
+cmds = [
+  "npm install -g $(node -p 'require(\"./package.json\").packageManager')",
+  "$(npm prefix -g)/bin/pnpm install --frozen-lockfile",
+]
