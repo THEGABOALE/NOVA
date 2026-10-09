@@ -1,10 +1,11 @@
 import Button from "../components/Button.jsx";
+import { SECTIONS } from "../config/navigation.js";
 import { NovaSpark } from "../components/Decorations.jsx";
 import LearningPreview from "../components/LearningPreview.jsx";
 
 function Hero() {
   return (
-    <section id="inicio" className="relative overflow-hidden">
+    <section id={SECTIONS.inicio} className="relative overflow-hidden">
       <div className="absolute right-4 top-12 h-20 w-20 text-nova-purple/15 nova-float">
         <NovaSpark />
       </div>
@@ -29,11 +30,11 @@ function Hero() {
           </p>
 
           <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row">
-            <Button href="#aventura">
+            <Button href={`#${SECTIONS.aventura}`}>
               Comenzar la aventura
             </Button>
 
-            <Button href="#descubre" variant="secondary">
+            <Button href={`#${SECTIONS.descubre}`} variant="secondary">
               Descubrir NOVA
             </Button>
           </div>

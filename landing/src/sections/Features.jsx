@@ -1,3 +1,5 @@
+import { SECTIONS } from "../config/navigation.js";
+
 const features = [
   {
     number: "01",
@@ -23,7 +25,7 @@ const features = [
 
 function Features() {
   return (
-    <section id="descubre" className="py-14 sm:py-16">
+    <section id={SECTIONS.descubre} className="py-14 sm:py-16">
       <div className="mx-auto w-full max-w-[88rem] px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl">
           <p className="eyebrow text-nova-purple">

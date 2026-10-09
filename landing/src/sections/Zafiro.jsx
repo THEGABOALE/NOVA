@@ -1,10 +1,11 @@
 import { NovaSpark } from "../components/Decorations.jsx";
 import NovaMark from "../components/NovaMark.jsx";
+import { SECTIONS } from "../config/navigation.js";
 
 function Zafiro() {
   return (
     <section
-      id="zafiro"
+      id={SECTIONS.zafiro}
       className="relative overflow-hidden py-14 sm:py-16"
     >
       <div className="absolute right-6 top-8 h-24 w-24 text-nova-purple/15 nova-pulse">

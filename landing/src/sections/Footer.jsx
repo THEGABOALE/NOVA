@@ -1,7 +1,6 @@
 import Button from "../components/Button.jsx";
 import NovaLogo from "../components/NovaLogo.jsx";
-
-const CONTACT = "mailto:contacto@novamindflow.com";
+import { CONTACT_HREF, SECTIONS, contactHref } from "../config/navigation.js";
 
 // Lo que no tiene `href` todavía no existe (secciones para docentes,
 // instituciones, FAQ, páginas legales): se muestra como texto, sin enlace,
@@ -10,10 +9,10 @@ const columns = [
   {
     title: "Producto",
     links: [
-      { label: "Cómo funciona", href: "#aventura" },
-      { label: "Experiencia", href: "#descubre" },
-      { label: "Misiones", href: "#descubre" },
-      { label: "Zafiro", href: "#zafiro" },
+      { label: "Cómo funciona", href: `#${SECTIONS.aventura}` },
+      { label: "Experiencia", href: `#${SECTIONS.descubre}` },
+      { label: "Misiones", href: `#${SECTIONS.descubre}` },
+      { label: "Zafiro", href: `#${SECTIONS.zafiro}` },
     ],
   },
   {
@@ -29,7 +28,7 @@ const columns = [
     links: [
       { label: "FAQ" },
       { label: "Soporte" },
-      { label: "Contacto", href: CONTACT },
+      { label: "Contacto", href: CONTACT_HREF },
     ],
   },
 ];
@@ -38,7 +37,7 @@ const legal = [
   { label: "Privacidad" },
   { label: "Términos" },
   { label: "Accesibilidad" },
-  { label: "Contacto", href: CONTACT },
+  { label: "Contacto", href: CONTACT_HREF },
 ];
 
 function FooterLink({ label, href }) {
@@ -73,7 +72,7 @@ function Footer() {
           </p>
 
           <Button
-            href={`${CONTACT}?subject=Quiero%20hablar%20con%20el%20equipo%20de%20NOVA`}
+            href={contactHref("Quiero hablar con el equipo de NOVA")}
             size="sm"
             className="mt-6 inline-flex"
           >

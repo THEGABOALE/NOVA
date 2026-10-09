@@ -1,4 +1,5 @@
 import { NovaDoodle } from "../components/Decorations.jsx";
+import { SECTIONS } from "../config/navigation.js";
 
 const steps = [
   {
@@ -26,7 +27,7 @@ const steps = [
 function Journey() {
   return (
     <section
-      id="aventura"
+      id={SECTIONS.aventura}
       className="mx-auto w-full max-w-[88rem] px-4 py-14 sm:px-6 lg:px-8 lg:py-16"
     >
       <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
