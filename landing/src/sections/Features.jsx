@@ -1,3 +1,5 @@
+import { SECTIONS } from "../config/navigation.js";
+
 const features = [
   {
     number: "01",
@@ -23,7 +25,7 @@ const features = [
 
 function Features() {
   return (
-    <section id="descubre" className="py-14 sm:py-16">
+    <section id={SECTIONS.descubre} className="py-14 sm:py-16">
       <div className="mx-auto w-full max-w-[88rem] px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl">
           <p className="eyebrow text-nova-purple">
@@ -41,11 +43,11 @@ function Features() {
           </p>
         </div>
 
-        <div className="feature-grid mt-10 grid overflow-hidden rounded-[2rem] border-2 border-nova-purple/10 sm:grid-cols-2">
+        <div className="mt-10 grid overflow-hidden rounded-[2rem] border-2 border-nova-purple/10 sm:grid-cols-2">
           {features.map((feature) => (
             <article
               key={feature.number}
-              className="reveal-card border-b-2 border-nova-purple/10 p-6 sm:border-b-0 sm:border-r-2 sm:p-7"
+              className="border-b-2 border-nova-purple/10 p-6 last:border-b-0 sm:border-b-0 sm:p-7 sm:odd:border-r-2 sm:[&:nth-child(-n+2)]:border-b-2"
             >
               <span className="font-display text-3xl text-nova-purple/75">
                 {feature.number}

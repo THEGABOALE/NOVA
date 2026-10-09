@@ -1,21 +1,22 @@
 import Button from "../components/Button.jsx";
+import { SECTIONS } from "../config/navigation.js";
 import { NovaSpark } from "../components/Decorations.jsx";
 import LearningPreview from "../components/LearningPreview.jsx";
 
 function Hero() {
   return (
-    <section id="inicio" className="relative overflow-hidden">
+    <section id={SECTIONS.inicio} className="relative overflow-hidden">
       <div className="absolute right-4 top-12 h-20 w-20 text-nova-purple/15 nova-float">
         <NovaSpark />
       </div>
 
-      <div className="mx-auto grid w-full max-w-[88rem] items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_1fr] lg:gap-14 lg:px-8 lg:py-16">
+      <div className="mx-auto grid w-full max-w-[88rem] items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:py-16">
         <div>
           <p className="eyebrow mb-5 text-nova-purple">
             Aprende · juega · descubre
           </p>
 
-          <h1 className="font-display max-w-3xl text-6xl leading-[0.96] text-nova-ink sm:text-7xl lg:text-[5.5rem]">
+          <h1 className="font-display max-w-3xl text-[clamp(2.5rem,11vw,3.75rem)] leading-[0.96] text-nova-ink md:text-7xl xl:text-[5.5rem]">
             Cada reto puede enseñarte{" "}
             <span className="text-nova-purple">
               algo para la vida.
@@ -29,11 +30,11 @@ function Hero() {
           </p>
 
           <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row">
-            <Button href="#aventura">
+            <Button href={`#${SECTIONS.aventura}`}>
               Comenzar la aventura
             </Button>
 
-            <Button href="#descubre" variant="secondary">
+            <Button href={`#${SECTIONS.descubre}`} variant="secondary">
               Descubrir NOVA
             </Button>
           </div>

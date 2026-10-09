@@ -48,7 +48,7 @@ function LearningPreview() {
             </p>
           </div>
 
-          <span className="rounded-full bg-nova-purple/10 px-4 py-2 text-xs font-bold text-nova-purple">
+          <span className="shrink-0 whitespace-nowrap rounded-full bg-nova-purple/10 px-4 py-2 text-xs font-bold text-nova-purple">
             3 de 5
           </span>
         </div>
@@ -63,11 +63,11 @@ function LearningPreview() {
             <div className="h-full w-3/5 rounded-full bg-nova-blue" />
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
             {missions.map((mission) => (
               <article
                 key={mission.number}
-                className={`reveal-card rounded-[1.4rem] border-2 p-4 ${
+                className={`rounded-[1.4rem] border-2 p-4 ${
                   mission.active
                     ? "border-nova-blue bg-nova-blue text-white"
                     : "border-nova-purple/10 bg-white text-nova-ink"
@@ -96,7 +96,7 @@ function LearningPreview() {
         </div>
 
         <div className="mt-4 flex items-center gap-4 rounded-[1.5rem] border-2 border-nova-purple/10 p-4">
-          <NovaMark className="h-12 w-12 shrink-0 text-nova-purple" />
+          <NovaMark className="h-12 w-12 shrink-0" />
 
           <div>
             <p className="font-display text-lg text-nova-ink">

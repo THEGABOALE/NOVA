@@ -25,51 +25,52 @@ html {
   scroll-behavior: smooth;
 }
 
-/* El navbar es fijo (unos 73 px): al saltar a una sección por su ancla, el
-   título queda debajo de él y no escondido detrás. */
+/* El navbar es fijo (69 px en el teléfono, 73 px desde 640 px): al saltar a
+   una sección por su ancla, el título queda debajo de él y no escondido detrás. */
 section[id] {
   scroll-margin-top: 6rem;
 }
 
 body {
-  margin: 0;
   background: var(--color-nova-mist);
   color: var(--color-nova-ink);
   font-family: "Agenor Neue", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-* {
-  box-sizing: border-box;
+/* En la capa de componentes para que las clases de Tailwind (por ejemplo
+   `h-10` en el logo del navbar) puedan sobrescribirlas. */
+@layer components {
+  .font-display {
+    font-family: "Chillax", "Trebuchet MS", Arial, sans-serif;
+    font-weight: 600;
+  }
+
+  .nova-logo {
+    display: block;
+    width: auto;
+    height: 3rem;
+    object-fit: contain;
+  }
+
+  .nova-mark {
+    display: block;
+    object-fit: contain;
+  }
+
+  .eyebrow {
+    font-family: "Chillax", "Trebuchet MS", Arial, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
 }
 
-.font-display {
-  font-family: "Chillax", "Trebuchet MS", Arial, sans-serif;
-  font-weight: 600;
-}
-
-.nova-logo {
-  display: block;
-  width: auto;
-  height: 3rem;
-  object-fit: contain;
-}
-
-.nova-mark {
-  display: block;
-  object-fit: contain;
-}
-
-.eyebrow {
-  font-family: "Chillax", "Trebuchet MS", Arial, sans-serif;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-
-a:focus-visible {
+/* Foco visible para todo lo que se puede usar con el teclado. */
+a:focus-visible,
+button:focus-visible {
   outline: 3px solid var(--color-nova-blue);
   outline-offset: 3px;
   border-radius: 9999px;
@@ -124,21 +125,6 @@ a:focus-visible {
   animation: novaPulse 4s ease-in-out infinite;
 }
 
-.reveal-card {
-  transition:
-    transform 220ms ease,
-    border-color 220ms ease,
-    background-color 220ms ease;
-}
-
-.reveal-card:hover {
-  transform: translateY(-5px);
-}
-
-.feature-grid > article:nth-child(even) {
-  border-right: 0;
-}
-
 /* Quien pidió menos movimiento en su sistema no ve las animaciones decorativas. */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -149,11 +135,5 @@ a:focus-visible {
   .nova-float-reverse,
   .nova-pulse {
     animation: none;
-  }
-
-  .reveal-card,
-  .reveal-card:hover {
-    transition: none;
-    transform: none;
   }
 }

@@ -1,19 +1,18 @@
 import Button from "../components/Button.jsx";
 import NovaLogo from "../components/NovaLogo.jsx";
-
-const CONTACT = "mailto:contacto@novamindflow.com";
+import { CONTACT_HREF, SECTIONS, contactHref } from "../config/navigation.js";
 
 // Lo que no tiene `href` todavía no existe (secciones para docentes,
-// instituciones, FAQ, páginas legales): se muestra como texto, sin enlace,
-// hasta que se cree.
+// instituciones, FAQ, páginas legales): se muestra como texto atenuado, sin
+// enlace, hasta que se cree.
 const columns = [
   {
     title: "Producto",
     links: [
-      { label: "Cómo funciona", href: "#aventura" },
-      { label: "Experiencia", href: "#descubre" },
-      { label: "Misiones", href: "#descubre" },
-      { label: "Zafiro", href: "#zafiro" },
+      { label: "Cómo funciona", href: `#${SECTIONS.aventura}` },
+      { label: "Experiencia", href: `#${SECTIONS.descubre}` },
+      { label: "Misiones", href: `#${SECTIONS.descubre}` },
+      { label: "Zafiro", href: `#${SECTIONS.zafiro}` },
     ],
   },
   {
@@ -29,7 +28,7 @@ const columns = [
     links: [
       { label: "FAQ" },
       { label: "Soporte" },
-      { label: "Contacto", href: CONTACT },
+      { label: "Contacto", href: CONTACT_HREF },
     ],
   },
 ];
@@ -38,16 +37,19 @@ const legal = [
   { label: "Privacidad" },
   { label: "Términos" },
   { label: "Accesibilidad" },
-  { label: "Contacto", href: CONTACT },
+  { label: "Contacto", href: CONTACT_HREF },
 ];
 
 function FooterLink({ label, href }) {
   if (!href) {
-    return <span>{label}</span>;
+    return <span className="inline-block py-1 text-nova-muted">{label}</span>;
   }
 
   return (
-    <a href={href} className="transition hover:text-nova-purple">
+    <a
+      href={href}
+      className="inline-block py-1 underline-offset-4 transition hover:text-nova-purple hover:underline"
+    >
       {label}
     </a>
   );
@@ -73,7 +75,7 @@ function Footer() {
           </p>
 
           <Button
-            href={`${CONTACT}?subject=Quiero%20hablar%20con%20el%20equipo%20de%20NOVA`}
+            href={contactHref("Quiero hablar con el equipo de NOVA")}
             size="sm"
             className="mt-6 inline-flex"
           >
@@ -88,7 +90,7 @@ function Footer() {
                 {column.title}
               </h2>
 
-              <ul className="mt-4 space-y-3 text-sm text-nova-body">
+              <ul className="mt-3 space-y-1 text-sm text-nova-body">
                 {column.links.map((link) => (
                   <li key={link.label}>
                     <FooterLink {...link} />
@@ -104,7 +106,7 @@ function Footer() {
         <div className="mx-auto flex w-full max-w-[88rem] flex-col gap-4 px-4 py-6 text-sm text-nova-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>© 2026 NOVA · MindFlow</p>
 
-          <ul className="flex flex-wrap gap-x-6 gap-y-2">
+          <ul className="flex flex-wrap gap-x-6 gap-y-1">
             {legal.map((link) => (
               <li key={link.label}>
                 <FooterLink {...link} />

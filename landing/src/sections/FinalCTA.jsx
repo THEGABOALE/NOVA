@@ -1,13 +1,12 @@
 import Button from "../components/Button.jsx";
 import NovaMark from "../components/NovaMark.jsx";
+import { SECTIONS, contactHref } from "../config/navigation.js";
 
 function FinalCTA() {
   return (
-    <section id="comenzar" className="py-14 sm:py-16">
+    <section id={SECTIONS.comenzar} className="py-14 sm:py-16">
       <div className="mx-auto w-full max-w-[72rem] px-4 text-center sm:px-6 lg:px-8">
-        <div className="mx-auto h-14 w-14 text-nova-purple nova-pulse">
-          <NovaMark className="h-14 w-14 text-nova-purple" />
-        </div>
+        <NovaMark className="nova-pulse mx-auto h-14 w-14" />
 
         <p className="eyebrow mt-6 text-nova-purple">
           NOVA
@@ -24,7 +23,7 @@ function FinalCTA() {
         </p>
 
         <Button
-          href="mailto:contacto@novamindflow.com?subject=Quiero%20conocer%20m%C3%A1s%20sobre%20NOVA"
+          href={contactHref("Quiero conocer más sobre NOVA")}
           className="mt-8 inline-flex"
         >
           Conocer más sobre NOVA
