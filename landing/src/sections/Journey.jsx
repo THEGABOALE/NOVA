@@ -1,63 +1,68 @@
 import { NovaSpark } from "../components/Decorations.jsx";
 import { SECTIONS } from "../config/navigation.js";
 
+// Cada paso trae sus hitos: lo que pasa dentro de esa etapa, tomado de su
+// propia descripción. En el recorrido van entre ese paso y el siguiente. La
+// descripción completa no se muestra (los hitos ya la resumen), pero se deja
+// para lectores de pantalla.
 const steps = [
   {
     number: "01",
-    title: "Entra a tu ruta",
+    title: "Comienza tu ruta",
     text: "Descubre misiones preparadas para tu nivel y empieza a avanzar.",
+    checkpoints: ["Descubre misiones", "Para tu nivel", "Empieza a avanzar"],
   },
   {
     number: "02",
     title: "Acepta el reto",
     text: "Responde, relaciona, decide y pon a prueba lo que sabes.",
+    checkpoints: ["Responde", "Relaciona ideas", "Toma decisiones"],
   },
   {
     number: "03",
     title: "Aprende jugando",
     text: "Cada actividad te ayuda a comprender situaciones que también pasan en la vida real.",
+    checkpoints: ["Explora situaciones", "Comprende", "Conecta con la vida real"],
   },
   {
     number: "04",
     title: "Mira cuánto avanzaste",
     text: "Completa misiones, desbloquea nuevos retos y observa tu progreso.",
+    checkpoints: ["Completa misiones", "Desbloquea retos", "Observa tu progreso"],
   },
 ];
 
-// Recorrido en escritorio: una S de dos filas. El DOM sigue en orden 01 → 04;
-// 03 y 04 solo se colocan de derecha a izquierda en la segunda fila. Cada paso
-// dibuja el tramo de línea que pasa por su nodo (a 1.375rem del borde, el
-// centro del nodo); los tramos cruzan el espacio entre columnas (4rem) para
-// unirse con el del paso vecino.
-const desktopTrack = [
-  { place: "", line: "left-[1.375rem] -right-16" },
-  { place: "", line: "left-0 right-0", curve: true },
-  { place: "lg:col-start-2 lg:row-start-2", line: "-left-16 right-0" },
-  { place: "lg:col-start-1 lg:row-start-2", line: "left-[1.375rem] right-0" },
+// El color avanza con el recorrido: morado claro del 01 al 02, morado del 02
+// al 04 y azul del 04 a la estrella final. Cada tramo (línea, hitos y curva)
+// es del color del paso donde empieza.
+const tones = [
+  { line: "bg-nova-purple/35", border: "border-nova-purple/35", node: "border-nova-purple" },
+  { line: "bg-nova-purple", border: "border-nova-purple", node: "border-nova-purple" },
+  { line: "bg-nova-purple", border: "border-nova-purple", node: "border-nova-purple" },
+  { line: "bg-nova-blue", border: "border-nova-blue", node: "border-nova-blue" },
 ];
 
-function StepNode({ last }) {
-  if (last) {
-    return (
-      <span
-        aria-hidden="true"
-        className="relative z-10 flex h-11 w-11 items-center justify-center rounded-full bg-nova-blue text-white"
-      >
-        <NovaSpark className="h-6 w-6" />
-      </span>
-    );
-  }
-
+function EndStar({ className = "" }) {
   return (
     <span
       aria-hidden="true"
-      className="relative z-10 flex h-11 w-11 items-center justify-center"
+      className={`z-10 h-11 w-11 items-center justify-center rounded-full bg-nova-blue text-white ${className}`}
     >
-      <span className="h-6 w-6 rounded-full border-4 border-nova-purple bg-nova-mist" />
+      <NovaSpark className="h-6 w-6" />
     </span>
   );
 }
 
+// Escritorio (lg): una serpiente de cuatro filas, una por paso. Las filas pares
+// van de izquierda a derecha y las impares al revés; el orden del DOM no
+// cambia. Cada fila tiene su nodo al empezar, sus hitos y, salvo la última, una
+// curva hacia la fila siguiente por el lado donde termina. La línea va a la
+// altura del centro del nodo (3rem de etiquetas + 1.375rem) y deja 1.375rem en
+// cada punta: ahí está el centro del nodo, de la estrella o el comienzo de la
+// curva, así los tramos no se pisan (con el morado claro se notaría). La curva
+// mide el alto de la fila más el espacio entre filas (2.5rem) y el grosor del
+// borde, así cae en la línea de abajo. El `<ol>` deja 4rem a cada lado para
+// las curvas.
 function Journey() {
   const lastIndex = steps.length - 1;
 
@@ -79,68 +84,110 @@ function Journey() {
         </h2>
       </div>
 
-      <p className="eyebrow mt-12 text-nova-purple lg:mt-16">
+      <p className="eyebrow mt-12 text-nova-purple lg:mt-16 lg:pl-16">
         Comienza
       </p>
 
-      {/* Teléfono y tablet: línea vertical con los nodos a la izquierda.
-          Escritorio (lg): la S, con 4rem a la derecha para la curva. */}
-      <ol className="mt-4 grid gap-y-10 lg:grid-cols-2 lg:gap-x-16 lg:gap-y-16 lg:pr-16">
+      <ol className="mt-4 grid gap-y-10 lg:mt-0 lg:px-16">
         {steps.map((step, index) => {
+          const tone = tones[index];
+          const reverse = index % 2 === 1;
           const last = index === lastIndex;
-          const track = desktopTrack[index];
 
           return (
             <li
               key={step.number}
-              className={`relative grid grid-cols-[2.75rem_1fr] gap-x-4 lg:block ${track.place}`}
+              className={`relative grid grid-cols-[2.75rem_1fr] gap-x-4 lg:gap-x-0 lg:pt-12 ${
+                reverse ? "lg:grid-cols-[1fr_2.75rem]" : ""
+              }`}
             >
-              {!last && (
-                <span
-                  aria-hidden="true"
-                  className="absolute left-5 top-[1.375rem] h-[calc(100%+2.5rem)] w-1 rounded-full bg-nova-purple lg:hidden"
-                />
-              )}
+              {/* Teléfono: línea vertical del nodo de este paso al siguiente;
+                  en el último, hasta la estrella final. */}
+              <span
+                aria-hidden="true"
+                className={`absolute left-5 top-[1.375rem] w-1 rounded-full lg:hidden ${tone.line} ${
+                  last ? "bottom-[1.375rem]" : "h-[calc(100%+2.5rem)]"
+                }`}
+              />
 
               <span
                 aria-hidden="true"
-                className={`absolute top-5 hidden h-1 bg-nova-purple lg:block ${track.line}`}
+                className={`absolute left-[1.375rem] right-[1.375rem] top-[4.25rem] hidden h-1 lg:block ${tone.line}`}
               />
 
-              {/* La curva baja desde el final de la primera fila hasta la
-                  línea de la segunda: mide el alto del paso 02 más el espacio
-                  entre filas (4rem) y el grosor del borde. */}
-              {track.curve && (
+              {!last && (
                 <span
                   aria-hidden="true"
-                  className="absolute left-full top-5 hidden h-[calc(100%+4rem+4px)] w-16 rounded-r-full border-4 border-l-0 border-nova-purple lg:block"
+                  className={`absolute top-[4.25rem] hidden h-[calc(100%+2.5rem+4px)] w-[5.375rem] border-4 lg:block ${tone.border} ${
+                    reverse
+                      ? "right-[calc(100%-1.375rem)] rounded-l-[3.5rem] border-r-0"
+                      : "left-[calc(100%-1.375rem)] rounded-r-[3.5rem] border-l-0"
+                  }`}
                 />
               )}
 
-              <StepNode last={last} />
+              {last && <EndStar className="absolute left-0 top-12 hidden lg:flex" />}
 
-              <div className="pt-2.5 lg:max-w-sm lg:pt-0 lg:mt-5">
+              <span
+                aria-hidden="true"
+                className={`relative z-10 flex h-11 w-11 items-center justify-center lg:row-start-1 ${
+                  reverse ? "lg:col-start-2" : "lg:col-start-1"
+                }`}
+              >
+                <span className={`h-6 w-6 rounded-full border-4 bg-nova-mist ${tone.node}`} />
+              </span>
+
+              <div
+                className={`pt-2.5 lg:col-span-2 lg:col-start-1 lg:row-start-2 lg:mt-3 lg:pt-0 ${
+                  reverse ? "lg:justify-self-end lg:text-right" : "lg:justify-self-start"
+                }`}
+              >
                 <span className="font-display text-lg text-nova-purple">
                   {step.number}
                 </span>
 
-                <h3 className="font-display mt-2 text-2xl text-nova-ink">
+                <h3 className="font-display mt-1 text-2xl text-nova-ink">
                   {step.title}
                 </h3>
 
-                <p className="mt-2 leading-7 text-nova-muted">
-                  {step.text}
-                </p>
+                <p className="sr-only">{step.text}</p>
               </div>
+
+              <ul
+                className={`col-span-2 mt-5 grid gap-3 lg:col-span-1 lg:row-start-1 lg:mt-0 lg:flex lg:justify-around ${
+                  reverse ? "lg:col-start-1 lg:flex-row-reverse" : "lg:col-start-2"
+                } ${last ? "lg:pl-11" : ""}`}
+              >
+                {step.checkpoints.map((checkpoint) => (
+                  <li
+                    key={checkpoint}
+                    className="grid grid-cols-[2.75rem_1fr] items-center gap-x-4 lg:relative lg:flex lg:h-11 lg:w-3.5 lg:justify-center"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`relative z-10 mx-auto h-3.5 w-3.5 rounded-full border-[3px] bg-nova-mist ${tone.border}`}
+                    />
+
+                    <span className="text-sm text-nova-body lg:absolute lg:bottom-full lg:left-1/2 lg:mb-1 lg:w-36 lg:-translate-x-1/2 lg:text-center lg:leading-5">
+                      {checkpoint}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              {last && (
+                <p className="col-span-2 mt-5 grid grid-cols-[2.75rem_1fr] items-center gap-x-4 lg:col-span-1 lg:col-start-1 lg:row-start-2 lg:mt-3 lg:flex lg:items-center lg:gap-2 lg:justify-self-start">
+                  <EndStar className="flex lg:hidden" />
+
+                  <span className="eyebrow flex items-center gap-2 text-nova-blue">
+                    Sigue avanzando
+                  </span>
+                </p>
+              )}
             </li>
           );
         })}
       </ol>
-
-      <p className="eyebrow mt-10 flex items-center gap-2 text-nova-blue lg:mt-14">
-        Sigue avanzando
-        <NovaSpark className="h-4 w-4" />
-      </p>
     </section>
   );
 }
