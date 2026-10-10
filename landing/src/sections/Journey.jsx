@@ -3,12 +3,12 @@ import { SECTIONS } from "../config/navigation.js";
 
 // Cada paso trae sus hitos: lo que pasa dentro de esa etapa, tomado de su
 // propia descripción. En el recorrido van entre ese paso y el siguiente. La
-// descripción completa no se muestra (los hitos ya la resumen), pero se deja
-// para lectores de pantalla.
+// descripción (`text`) queda en los datos, pero no se muestra ni se lee: los
+// hitos ya la resumen.
 const steps = [
   {
     number: "01",
-    title: "Comienza tu ruta",
+    title: "Empieza tu ruta",
     text: "Descubre misiones preparadas para tu nivel y empieza a avanzar.",
     checkpoints: ["Descubre misiones", "Para tu nivel", "Empieza a avanzar"],
   },
@@ -57,12 +57,12 @@ function EndStar({ className = "" }) {
 // van de izquierda a derecha y las impares al revés; el orden del DOM no
 // cambia. Cada fila tiene su nodo al empezar, sus hitos y, salvo la última, una
 // curva hacia la fila siguiente por el lado donde termina. La línea va a la
-// altura del centro del nodo (3rem de etiquetas + 1.375rem) y deja 1.375rem en
+// altura del centro del nodo (2.75rem de etiquetas + 1.375rem) y deja 1.375rem en
 // cada punta: ahí está el centro del nodo, de la estrella o el comienzo de la
 // curva, así los tramos no se pisan (con el morado claro se notaría). La curva
-// mide el alto de la fila más el espacio entre filas (2.5rem) y el grosor del
+// mide el alto de la fila más el espacio entre filas (1.25rem) y el grosor del
 // borde, así cae en la línea de abajo. El `<ol>` deja 4rem a cada lado para
-// las curvas.
+// las curvas y, a la izquierda de la primera fila, para el punto de inicio.
 function Journey() {
   const lastIndex = steps.length - 1;
 
@@ -84,110 +84,141 @@ function Journey() {
         </h2>
       </div>
 
-      <p className="eyebrow mt-12 text-nova-purple lg:mt-16 lg:pl-16">
-        Comienza
-      </p>
+      {/* El recorrido arranca en "Comenzar", un punto pequeño antes del 01:
+          arriba de la línea en el teléfono y a la izquierda en escritorio. */}
+      <div className="relative mt-12 lg:mt-16">
+        <p className="grid h-6 grid-cols-[2.75rem_1fr] items-center gap-x-4 lg:absolute lg:left-0 lg:top-7 lg:block lg:h-auto">
+          <span
+            aria-hidden="true"
+            className="mx-auto h-3.5 w-3.5 rounded-full bg-nova-purple lg:hidden"
+          />
 
-      <ol className="mt-4 grid gap-y-10 lg:mt-0 lg:px-16">
-        {steps.map((step, index) => {
-          const tone = tones[index];
-          const reverse = index % 2 === 1;
-          const last = index === lastIndex;
+          <span className="eyebrow text-nova-purple">
+            Comenzar
+          </span>
+        </p>
 
-          return (
-            <li
-              key={step.number}
-              className={`relative grid grid-cols-[2.75rem_1fr] gap-x-4 lg:gap-x-0 lg:pt-12 ${
-                reverse ? "lg:grid-cols-[1fr_2.75rem]" : ""
-              }`}
-            >
-              {/* Teléfono: línea vertical del nodo de este paso al siguiente;
-                  en el último, hasta la estrella final. */}
-              <span
-                aria-hidden="true"
-                className={`absolute left-5 top-[1.375rem] w-1 rounded-full lg:hidden ${tone.line} ${
-                  last ? "bottom-[1.375rem]" : "h-[calc(100%+2.5rem)]"
+        <ol className="mt-6 grid gap-y-10 lg:mt-0 lg:gap-y-5 lg:px-16">
+          {steps.map((step, index) => {
+            const tone = tones[index];
+            const reverse = index % 2 === 1;
+            const last = index === lastIndex;
+
+            return (
+              <li
+                key={step.number}
+                className={`relative grid grid-cols-[2.75rem_1fr] gap-x-4 lg:gap-x-0 lg:pt-11 ${
+                  reverse ? "lg:grid-cols-[1fr_2.75rem]" : ""
                 }`}
-              />
-
-              <span
-                aria-hidden="true"
-                className={`absolute left-[1.375rem] right-[1.375rem] top-[4.25rem] hidden h-1 lg:block ${tone.line}`}
-              />
-
-              {!last && (
+              >
+                {/* Teléfono: línea vertical del nodo de este paso al siguiente;
+                    en el último, hasta la estrella final. */}
                 <span
                   aria-hidden="true"
-                  className={`absolute top-[4.25rem] hidden h-[calc(100%+2.5rem+4px)] w-[5.375rem] border-4 lg:block ${tone.border} ${
-                    reverse
-                      ? "right-[calc(100%-1.375rem)] rounded-l-[3.5rem] border-r-0"
-                      : "left-[calc(100%-1.375rem)] rounded-r-[3.5rem] border-l-0"
+                  className={`absolute left-5 top-[1.375rem] w-1 rounded-full lg:hidden ${tone.line} ${
+                    last ? "bottom-[1.375rem]" : "h-[calc(100%+2.5rem)]"
                   }`}
                 />
-              )}
 
-              {last && <EndStar className="absolute left-0 top-12 hidden lg:flex" />}
+                <span
+                  aria-hidden="true"
+                  className={`absolute left-[1.375rem] right-[1.375rem] top-[4rem] hidden h-1 lg:block ${tone.line}`}
+                />
 
-              <span
-                aria-hidden="true"
-                className={`relative z-10 flex h-11 w-11 items-center justify-center lg:row-start-1 ${
-                  reverse ? "lg:col-start-2" : "lg:col-start-1"
-                }`}
-              >
-                <span className={`h-6 w-6 rounded-full border-4 bg-nova-mist ${tone.node}`} />
-              </span>
-
-              <div
-                className={`pt-2.5 lg:col-span-2 lg:col-start-1 lg:row-start-2 lg:mt-3 lg:pt-0 ${
-                  reverse ? "lg:justify-self-end lg:text-right" : "lg:justify-self-start"
-                }`}
-              >
-                <span className="font-display text-lg text-nova-purple">
-                  {step.number}
-                </span>
-
-                <h3 className="font-display mt-1 text-2xl text-nova-ink">
-                  {step.title}
-                </h3>
-
-                <p className="sr-only">{step.text}</p>
-              </div>
-
-              <ul
-                className={`col-span-2 mt-5 grid gap-3 lg:col-span-1 lg:row-start-1 lg:mt-0 lg:flex lg:justify-around ${
-                  reverse ? "lg:col-start-1 lg:flex-row-reverse" : "lg:col-start-2"
-                } ${last ? "lg:pl-11" : ""}`}
-              >
-                {step.checkpoints.map((checkpoint) => (
-                  <li
-                    key={checkpoint}
-                    className="grid grid-cols-[2.75rem_1fr] items-center gap-x-4 lg:relative lg:flex lg:h-11 lg:w-3.5 lg:justify-center"
-                  >
+                {/* Tramo desde el punto de "Comenzar" hasta el 01: en el
+                    teléfono baja desde arriba; en escritorio llega desde 3rem a
+                    la izquierda. */}
+                {index === 0 && (
+                  <>
                     <span
                       aria-hidden="true"
-                      className={`relative z-10 mx-auto h-3.5 w-3.5 rounded-full border-[3px] bg-nova-mist ${tone.border}`}
+                      className={`absolute -top-9 left-5 h-[3.625rem] w-1 lg:hidden ${tone.line}`}
                     />
 
-                    <span className="text-sm text-nova-body lg:absolute lg:bottom-full lg:left-1/2 lg:mb-1 lg:w-36 lg:-translate-x-1/2 lg:text-center lg:leading-5">
-                      {checkpoint}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                    <span
+                      aria-hidden="true"
+                      className={`absolute -left-12 top-[4rem] hidden h-1 w-[4.375rem] lg:block ${tone.line}`}
+                    />
 
-              {last && (
-                <p className="col-span-2 mt-5 grid grid-cols-[2.75rem_1fr] items-center gap-x-4 lg:col-span-1 lg:col-start-1 lg:row-start-2 lg:mt-3 lg:flex lg:items-center lg:gap-2 lg:justify-self-start">
-                  <EndStar className="flex lg:hidden" />
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-[calc(-3rem-7px)] top-[calc(4.125rem-7px)] z-10 hidden h-3.5 w-3.5 rounded-full bg-nova-purple lg:block"
+                    />
+                  </>
+                )}
 
-                  <span className="eyebrow flex items-center gap-2 text-nova-blue">
-                    Sigue avanzando
+                {!last && (
+                  <span
+                    aria-hidden="true"
+                    className={`absolute top-[4rem] hidden h-[calc(100%+1.25rem+4px)] w-[5.375rem] border-4 lg:block ${tone.border} ${
+                      reverse
+                        ? "right-[calc(100%-1.375rem)] rounded-l-[3.5rem] border-r-0"
+                        : "left-[calc(100%-1.375rem)] rounded-r-[3.5rem] border-l-0"
+                    }`}
+                  />
+                )}
+
+                {last && <EndStar className="absolute left-0 top-11 hidden lg:flex" />}
+
+                <span
+                  aria-hidden="true"
+                  className={`relative z-10 flex h-11 w-11 items-center justify-center lg:row-start-1 ${
+                    reverse ? "lg:col-start-2" : "lg:col-start-1"
+                  }`}
+                >
+                  <span className={`h-6 w-6 rounded-full border-4 bg-nova-mist ${tone.node}`} />
+                </span>
+
+                <div
+                  className={`pt-3 lg:col-span-2 lg:col-start-1 lg:row-start-2 lg:mt-1 lg:pt-0 ${
+                    reverse ? "lg:justify-self-end lg:text-right" : "lg:justify-self-start"
+                  }`}
+                >
+                  <span className="font-display block text-lg leading-none text-nova-purple">
+                    {step.number}
                   </span>
-                </p>
-              )}
-            </li>
-          );
-        })}
-      </ol>
+
+                  <h3 className="font-display mt-1.5 text-2xl text-nova-ink">
+                    {step.title}
+                  </h3>
+                </div>
+
+                <ul
+                  className={`col-span-2 mt-5 grid gap-3 lg:col-span-1 lg:row-start-1 lg:mt-0 lg:flex lg:justify-around ${
+                    reverse ? "lg:col-start-1 lg:flex-row-reverse" : "lg:col-start-2"
+                  } ${last ? "lg:pl-11" : ""}`}
+                >
+                  {step.checkpoints.map((checkpoint) => (
+                    <li
+                      key={checkpoint}
+                      className="grid grid-cols-[2.75rem_1fr] items-center gap-x-4 lg:relative lg:flex lg:h-11 lg:w-3.5 lg:justify-center"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`relative z-10 mx-auto h-3.5 w-3.5 rounded-full border-[3px] bg-nova-mist ${tone.border}`}
+                      />
+
+                      <span className="text-sm text-nova-body lg:absolute lg:bottom-full lg:left-1/2 lg:mb-1 lg:w-36 lg:-translate-x-1/2 lg:text-center lg:text-[0.9375rem] lg:font-medium lg:leading-5">
+                        {checkpoint}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                {last && (
+                  <p className="col-span-2 mt-5 grid grid-cols-[2.75rem_1fr] items-center gap-x-4 lg:col-span-1 lg:col-start-1 lg:row-start-2 lg:mt-3 lg:flex lg:items-center lg:gap-2 lg:justify-self-start">
+                    <EndStar className="flex lg:hidden" />
+
+                    <span className="eyebrow flex items-center gap-2 text-nova-blue">
+                      Sigue avanzando
+                    </span>
+                  </p>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </section>
   );
 }
