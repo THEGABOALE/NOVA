@@ -14,12 +14,20 @@
 }
 
 /*
-  Tipografía
-  - Principal (títulos): Chillax Semibold, se carga desde Fontshare en index.html.
-  - Secundaria (texto): Agenor Neue Regular. Todavía no está en el proyecto;
-    mientras tanto se usa la fuente del sistema. Cuando esté el archivo, se
-    agrega aquí con @font-face (src/assets/fonts/AgenorNeue-Regular.woff2).
+  Tipografía: las familias se definen solo aquí y el resto del CSS las usa.
+  - --font-display (títulos y eyebrows): Chillax Semibold, se carga desde
+    Fontshare en index.html.
+  - --font-body (texto): Agenor Neue es la tipografía secundaria de marca, pero
+    el webfont autorizado todavía no está incluido, así que hoy se ve la fuente
+    del sistema. Cuando esté el archivo, se agrega aquí con @font-face
+    (src/assets/fonts/AgenorNeue-Regular.woff2, font-display: swap).
+  Van en :root y no en @theme para que Tailwind no genere una utilidad
+  `font-display` que choque con la clase .font-display.
 */
+:root {
+  --font-display: "Chillax", "Trebuchet MS", Arial, sans-serif;
+  --font-body: "Agenor Neue", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
 
 html {
   scroll-behavior: smooth;
@@ -34,7 +42,7 @@ section[id] {
 body {
   background: var(--color-nova-mist);
   color: var(--color-nova-ink);
-  font-family: "Agenor Neue", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -42,7 +50,7 @@ body {
    `h-10` en el logo del navbar) puedan sobrescribirlas. */
 @layer components {
   .font-display {
-    font-family: "Chillax", "Trebuchet MS", Arial, sans-serif;
+    font-family: var(--font-display);
     font-weight: 600;
   }
 
@@ -59,7 +67,7 @@ body {
   }
 
   .eyebrow {
-    font-family: "Chillax", "Trebuchet MS", Arial, sans-serif;
+    font-family: var(--font-display);
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.12em;
