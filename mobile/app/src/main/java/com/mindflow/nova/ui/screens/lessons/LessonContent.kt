@@ -28,6 +28,7 @@ import com.mindflow.nova.data.model.AnswerSubmission
 import com.mindflow.nova.data.model.AttemptResult
 import com.mindflow.nova.data.model.MissionContent
 import com.mindflow.nova.data.model.MissionResponse
+import com.mindflow.nova.data.model.supportsMechanic
 import com.mindflow.nova.data.offline.LessonOutcome
 import com.mindflow.nova.ui.components.ScopedViewModels
 import com.mindflow.nova.ui.screens.lessons.common.LessonEndScreen
@@ -95,8 +96,15 @@ fun MissionContent.toLessonQuestions(): List<LessonQuestion> =
  * pregunta de una lista vacía y la app se cerrara.
  */
 fun MissionContent.hasPlayableContent(): Boolean = when (mechanic) {
-    "matching" -> questions.any { it.pairs.isNotEmpty() }
-    else -> questions.isNotEmpty() && questions.all { it.options.isNotEmpty() }
+    "matching" -> questions.size == 1 && questions.single().type == mechanic && questions.single().pairs.isNotEmpty()
+    "multiple_choice" -> questions.isNotEmpty() && questions.all {
+        it.type == mechanic && it.options.size >= 2 && it.options.count { option -> option.isCorrect } == 1
+    }
+    "true_false" -> questions.isNotEmpty() && questions.all {
+        it.type == mechanic && it.options.size == 2 && it.options.count { option -> option.isCorrect } == 1 &&
+            it.options.map { option -> option.text.trim().lowercase() }.toSet() == setOf("verdadero", "falso")
+    }
+    else -> false
 }
 
 /**
@@ -193,8 +201,8 @@ fun LessonHost(mission: MissionResponse, seedBalance: Int, onExit: () -> Unit) {
             .background(NovaBackground)
             .systemBarsPadding()
     ) {
-        if (mechanic != "multiple_choice" && mechanic != "matching" && mechanic != "true_false") {
-            MiniGamePlaceholderScreen(mission = mission, onBack = onExit)
+        if (!supportsMechanic(mechanic)) {
+            LessonContentError(message = "Esta misión necesita una versión de NOVA que soporte ${mechanicLabel(mechanic)}.", onExit = onExit)
         } else {
             ScopedViewModels {
                 LessonHostContent(mission = mission, mechanic = mechanic, seedBalance = seedBalance, onExit = onExit)
@@ -206,12 +214,14 @@ fun LessonHost(mission: MissionResponse, seedBalance: Int, onExit: () -> Unit) {
 @Composable
 private fun LessonHostContent(
     mission: MissionResponse,
-    mechanic: String,
+    mechanic: String?,
     seedBalance: Int,
     onExit: () -> Unit,
-    viewModel: LessonViewModel = viewModel()
+    viewModel: LessonViewModel = viewModel(factory = LessonViewModel.Factory)
 ) {
     val state by viewModel.state.collectAsState()
+    val exitLesson = { viewModel.abandon(); onExit() }
+    BackHandler(onBack = exitLesson)
 
     LaunchedEffect(mission.id) {
         viewModel.open(mission.id)
@@ -220,10 +230,15 @@ private fun LessonHostContent(
     when (val current = state) {
         LessonState.Loading -> LessonContentLoading()
 
-        is LessonState.Error -> LessonContentError(message = current.message, onExit = onExit)
+        is LessonState.Error -> LessonContentError(message = current.message, onExit = exitLesson)
 
         // Con key, cada reintento vuelve a montar la pantalla de la mecánica desde cero.
         is LessonState.Playing -> key(current.attemptNumber) {
+            val playableMission = mission.copy(
+                mechanic = current.content.mechanic,
+                maxPlumas = current.content.maxPlumas,
+                timeLimitSeconds = current.content.timeLimitSeconds
+            )
             val attempt = LessonAttempt(
                 id = current.attemptId,
                 onRetry = viewModel::retry,
@@ -234,27 +249,27 @@ private fun LessonHostContent(
                 seedBalance = seedBalance
             )
 
-            when (mechanic) {
+            when (current.content.mechanic) {
                 "multiple_choice" -> LessonPlayScreen(
-                    mission = mission,
+                    mission = playableMission,
                     questions = current.content.toLessonQuestions(),
                     attempt = attempt,
-                    onExit = onExit
+                    onExit = exitLesson
                 )
 
                 "matching" -> MatchingLessonScreen(
-                    mission = mission,
+                    mission = playableMission,
                     pairs = current.content.toMatchingPairs(),
                     questionId = current.content.matchingQuestionId() ?: 0,
                     attempt = attempt,
-                    onExit = onExit
+                    onExit = exitLesson
                 )
 
                 "true_false" -> TrueFalseLessonScreen(
-                    mission = mission,
+                    mission = playableMission,
                     questions = current.content.toTrueFalseQuestions(),
                     attempt = attempt,
-                    onExit = onExit
+                    onExit = exitLesson
                 )
 
                 else -> MiniGamePlaceholderScreen(mission = mission, onBack = onExit)

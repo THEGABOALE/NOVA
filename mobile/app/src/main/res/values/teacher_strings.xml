@@ -1,0 +1,20 @@
+<resources>
+    <string name="teacher_rooms">Salas</string>
+    <string name="teacher_back">Volver a salas</string>
+    <string name="teacher_refresh">Actualizar</string>
+    <string name="sign_out">Cerrar sesión</string>
+    <string name="sign_out_question">¿Cerrar sesión?</string>
+    <string name="sign_out_description">Vas a volver a la pantalla de inicio de sesión.</string>
+    <string name="retry">Reintentar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="teacher_room_info">%1$s · %2$s · %3$d</string>
+    <string name="teacher_student_count">Estudiantes en esta sala: %1$d</string>
+    <string name="teacher_summary">Resumen de aciertos</string>
+    <string name="teacher_no_results">Aún no hay resultados en esta sala.</string>
+    <string name="teacher_students">Estudiantes</string>
+    <string name="teacher_no_students">Aún no hay estudiantes en esta sala.</string>
+    <string name="teacher_no_rooms">Aún no tienes salas asignadas.</string>
+    <string name="teacher_mechanic_result">%1$s: %2$.1f %%</string>
+    <string name="teacher_student_progress">%1$d misiones completadas · %2$d semillas</string>
+    <string name="teacher_last_time">Último intento: %1$d segundos</string>
+</resources>

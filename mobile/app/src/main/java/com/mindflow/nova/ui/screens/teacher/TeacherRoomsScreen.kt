@@ -1,404 +1,107 @@
 package com.mindflow.nova.ui.screens.teacher
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Logout
-import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mindflow.nova.R
+import com.mindflow.nova.ui.screens.lessons.mechanicLabel
 import com.mindflow.nova.ui.theme.NovaBackground
-import com.mindflow.nova.ui.theme.NovaBorder
-import com.mindflow.nova.ui.theme.NovaLightPurple
-import com.mindflow.nova.ui.theme.NovaOnPurple
-import com.mindflow.nova.ui.theme.NovaPurple
-import com.mindflow.nova.ui.theme.NovaSurface
 import com.mindflow.nova.ui.theme.NovaText
-import com.mindflow.nova.ui.theme.NovaTextSecondary
 
-/**
- * Panel docente: lista de Salas y, dentro de cada una, el perfil del maestro
- * con pestañas por grado (roster de alumnos) y una pestaña de Resumen con el
- * porcentaje de acierto por minijuego. Todo sobre datos mock — no hay
- * backend de salones/alumnos todavía.
- */
 @Composable
-fun TeacherRoomsScreen(onLogout: () -> Unit) {
-    var selectedRoom by remember { mutableStateOf<TeacherRoom?>(null) }
-
-    val room = selectedRoom
-    if (room != null) {
-        // "Atrás" del teléfono en el detalle vuelve a la lista de salas.
-        BackHandler { selectedRoom = null }
-
-        TeacherRoomDetailScreen(
-            room = room,
-            onBack = { selectedRoom = null }
-        )
-    } else {
-        SalasListScreen(
-            rooms = TeacherMockData.rooms,
-            onLogout = onLogout,
-            onRoomSelected = { selectedRoom = it }
-        )
-    }
+fun TeacherRoomsScreen(onLogout: () -> Unit, viewModel: TeacherRoomsViewModel = viewModel()) {
+    val state by viewModel.state.collectAsState()
+    LaunchedEffect(Unit) { viewModel.refresh() }
+    TeacherRoomsContent(state, viewModel::refresh, onLogout)
 }
 
 @Composable
-private fun SalasListScreen(
-    rooms: List<TeacherRoom>,
-    onLogout: () -> Unit,
-    onRoomSelected: (TeacherRoom) -> Unit
-) {
-    var confirmLogout by remember { mutableStateOf(false) }
+internal fun TeacherRoomsContent(state: TeacherRoomsState, onRefresh: () -> Unit, onLogout: () -> Unit) {
+    var selectedId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var confirmLogout by rememberSaveable { mutableStateOf(false) }
+    val room = state.rooms.firstOrNull { it.id == selectedId }
+    BackHandler(enabled = selectedId != null) { selectedId = null }
 
-    Scaffold(containerColor = NovaBackground) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(24.dp)
+    Scaffold(containerColor = NovaBackground) { padding ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Antes había una flecha "atrás" que cerraba la sesión sin avisar;
-            // ahora cerrar sesión es un botón propio y pide confirmación.
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Salas",
-                    color = NovaText,
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.weight(1f)
-                )
-
-                IconButton(onClick = { confirmLogout = true }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.Logout,
-                        contentDescription = "Cerrar sesión",
-                        tint = NovaText
-                    )
-                }
+            item {
+                Text(room?.name ?: stringResource(R.string.teacher_rooms), style = MaterialTheme.typography.headlineMedium, color = NovaText)
+                if (selectedId != null) TextButton(onClick = { selectedId = null }) { Text(stringResource(R.string.teacher_back)) }
+                OutlinedButton(onClick = onRefresh, enabled = !state.loading) { Text(stringResource(R.string.teacher_refresh)) }
+                TextButton(onClick = { confirmLogout = true }) { Text(stringResource(R.string.sign_out)) }
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                rooms.forEach { room ->
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onRoomSelected(room) },
-                        shape = RoundedCornerShape(16.dp),
-                        color = room.accentColor
-                    ) {
-                        Text(
-                            text = room.name,
-                            modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
-                            // El pastel de la sala es claro también en modo oscuro:
-                            // el texto va siempre oscuro para que se lea.
-                            color = RoomCardText,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
+            when {
+                state.loading -> item { CircularProgressIndicator() }
+                state.error != null -> item {
+                    Text(state.error, style = MaterialTheme.typography.bodyLarge)
+                    Button(onClick = onRefresh) { Text(stringResource(R.string.retry)) }
+                }
+                room != null -> {
+                    item {
+                        Text(stringResource(R.string.teacher_room_info, room.grade, room.section.orEmpty(), room.schoolYear), style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.teacher_student_count, room.studentCount), style = MaterialTheme.typography.titleMedium)
                     }
+                    item { Text(stringResource(R.string.teacher_summary), style = MaterialTheme.typography.titleLarge) }
+                    if (room.resultsByMechanic.isEmpty()) item { Text(stringResource(R.string.teacher_no_results)) }
+                    items(room.resultsByMechanic, key = { it.mechanic }) { result ->
+                        Text(stringResource(R.string.teacher_mechanic_result, mechanicLabel(result.mechanic), result.averageScore), style = MaterialTheme.typography.bodyLarge)
+                    }
+                    item { Text(stringResource(R.string.teacher_students), style = MaterialTheme.typography.titleLarge) }
+                    if (room.students.isEmpty()) item { Text(stringResource(R.string.teacher_no_students)) }
+                    items(room.students, key = { it.id }) { student ->
+                        Surface(shape = MaterialTheme.shapes.medium) {
+                            Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                                Text(student.fullName, style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(R.string.teacher_student_progress, student.missionsCompleted, student.totalPoints))
+                                student.lastAttemptSeconds?.let { Text(stringResource(R.string.teacher_last_time, it)) }
+                            }
+                        }
+                    }
+                }
+                state.rooms.isEmpty() -> item { Text(stringResource(R.string.teacher_no_rooms)) }
+                else -> items(state.rooms, key = { it.id }) { available ->
+                    OutlinedButton(
+                        onClick = { selectedId = available.id },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    ) { Text(available.name, style = MaterialTheme.typography.titleMedium) }
                 }
             }
         }
     }
-
-    if (confirmLogout) {
-        AlertDialog(
-            onDismissRequest = { confirmLogout = false },
-            title = { Text("¿Cerrar sesión?") },
-            text = { Text("Vas a volver a la pantalla de inicio de sesión.") },
-            confirmButton = {
-                TextButton(onClick = onLogout) { Text("Cerrar sesión") }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmLogout = false }) { Text("Cancelar") }
-            }
-        )
-    }
+    if (confirmLogout) AlertDialog(
+        onDismissRequest = { confirmLogout = false },
+        title = { Text(stringResource(R.string.sign_out_question)) },
+        text = { Text(stringResource(R.string.sign_out_description)) },
+        confirmButton = { TextButton(onClick = onLogout) { Text(stringResource(R.string.sign_out)) } },
+        dismissButton = { TextButton(onClick = { confirmLogout = false }) { Text(stringResource(R.string.cancel)) } }
+    )
 }
-
-@Composable
-private fun TeacherRoomDetailScreen(
-    room: TeacherRoom,
-    onBack: () -> Unit
-) {
-    var selectedTab by remember(room.id) { mutableStateOf(0) }
-    val tabLabels = room.gradeLabels + "Resumen"
-
-    Scaffold(containerColor = NovaBackground) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 24.dp)
-        ) {
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.Rounded.ArrowBack,
-                        contentDescription = "Volver a salas",
-                        tint = NovaText
-                    )
-                }
-
-                Text(
-                    text = "perfil maestro",
-                    color = NovaTextSecondary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Surface(
-                    modifier = Modifier.size(72.dp),
-                    shape = CircleShape,
-                    color = NovaLightPurple
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Rounded.Person,
-                            contentDescription = null,
-                            tint = NovaPurple,
-                            modifier = Modifier.size(36.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = room.teacherName,
-                    color = NovaText,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    ProfileStat(value = room.studentCount, label = "Cantidad de alumnos")
-                    ProfileStat(value = room.roomsAssigned, label = "Salas asignadas")
-                    ProfileStat(value = room.minigamesScheduled, label = "Mini juegos programados")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(50.dp),
-                    color = NovaSurface,
-                    border = BorderStroke(1.dp, NovaBorder)
-                ) {
-                    Text(
-                        text = room.levelLabel,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp),
-                        color = NovaText,
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(tabLabels) { label ->
-                    val index = tabLabels.indexOf(label)
-                    val isSelected = index == selectedTab
-                    Surface(
-                        modifier = Modifier.clickable { selectedTab = index },
-                        shape = RoundedCornerShape(50.dp),
-                        color = if (isSelected) NovaPurple else NovaSurface,
-                        border = if (isSelected) null else BorderStroke(1.dp, NovaBorder)
-                    ) {
-                        Text(
-                            text = label,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                            color = if (isSelected) NovaOnPurple else NovaTextSecondary,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (selectedTab == tabLabels.lastIndex) {
-                ResumenList(results = room.minigameResults)
-            } else {
-                RosterList(students = room.students)
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProfileStat(value: Int, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = value.toString(), color = NovaText, fontWeight = FontWeight.Black, fontSize = 18.sp)
-        Text(
-            text = label,
-            color = NovaTextSecondary,
-            fontSize = 10.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.width(80.dp)
-        )
-    }
-}
-
-@Composable
-private fun RosterList(students: List<TeacherStudent>) {
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        items(students) { student ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    modifier = Modifier.size(28.dp),
-                    shape = CircleShape,
-                    color = NovaLightPurple
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Rounded.Person,
-                            contentDescription = null,
-                            tint = NovaPurple,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Text(
-                    text = student.name,
-                    modifier = Modifier.weight(1f),
-                    color = NovaText,
-                    fontSize = 13.sp
-                )
-
-                if (student.elapsedTime != null) {
-                    Text(
-                        text = student.elapsedTime,
-                        color = NovaTextSecondary,
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                }
-
-                Icon(
-                    imageVector = Icons.Rounded.ChevronRight,
-                    contentDescription = null,
-                    tint = NovaTextSecondary,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ResumenList(results: List<MinigameResult>) {
-    Column {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "Nombres de mini juego",
-                modifier = Modifier.weight(1f),
-                color = NovaTextSecondary,
-                fontSize = 11.sp
-            )
-            Text(
-                text = "porcentaje por salón",
-                color = NovaTextSecondary,
-                fontSize = 11.sp
-            )
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            results.forEach { result ->
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    color = NovaLightPurple
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = result.name,
-                            modifier = Modifier.weight(1f),
-                            color = NovaPurple,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        )
-                        Text(
-                            text = "${result.percentage}%",
-                            color = NovaPurple,
-                            fontWeight = FontWeight.Black,
-                            fontSize = 13.sp
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-/** Texto sobre el pastel de cada sala, que es claro en los dos temas. */
-private val RoomCardText = Color(0xFF1E1A22)

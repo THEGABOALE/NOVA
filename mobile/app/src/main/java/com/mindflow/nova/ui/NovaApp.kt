@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,6 +21,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.key
+import com.mindflow.nova.ui.components.ScopedViewModels
 import androidx.compose.runtime.Composable
 import com.mindflow.nova.ui.theme.isDark
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -110,6 +113,8 @@ fun NovaApp(session: SessionRepository, themePreferences: ThemePreferences) {
     }
 
     NOVATheme(darkTheme = darkActive) {
+        Box(Modifier.fillMaxSize().background(NovaBackground), contentAlignment = Alignment.TopCenter) {
+        Box(Modifier.widthIn(max = 720.dp).fillMaxSize()) {
         when (val current = screen) {
             AppScreen.Loading -> LoadingScreen()
 
@@ -130,7 +135,7 @@ fun NovaApp(session: SessionRepository, themePreferences: ThemePreferences) {
                 }
             )
 
-            AppScreen.StudentHome -> HomeScreen(
+            AppScreen.StudentHome -> key(session.currentUserId()) { ScopedViewModels { HomeScreen(
                 themeMode = themeMode,
                 onThemeModeChange = { mode ->
                     themeMode = mode
@@ -140,14 +145,14 @@ fun NovaApp(session: SessionRepository, themePreferences: ThemePreferences) {
                     session.logout()
                     screen = AppScreen.Login
                 }
-            )
+            ) } }
 
-            AppScreen.TeacherHome -> TeacherRoomsScreen(
+            AppScreen.TeacherHome -> key(session.currentUserId()) { ScopedViewModels { TeacherRoomsScreen(
                 onLogout = {
                     session.logout()
                     screen = AppScreen.Login
                 }
-            )
+            ) } }
 
             AppScreen.ConnectionError -> ConnectionErrorScreen(
                 onRetry = { restoreAttempt++ },
@@ -164,6 +169,8 @@ fun NovaApp(session: SessionRepository, themePreferences: ThemePreferences) {
                     screen = AppScreen.Login
                 }
             )
+        }
+        }
         }
     }
 }

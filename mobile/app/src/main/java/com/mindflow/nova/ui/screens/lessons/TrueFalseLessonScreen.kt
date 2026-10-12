@@ -26,12 +26,13 @@ import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.mindflow.nova.ui.components.jsonStateSaver
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,7 +65,6 @@ import com.mindflow.nova.ui.theme.NovaPurple
 import com.mindflow.nova.ui.theme.NovaSuccess
 import com.mindflow.nova.ui.theme.NovaText
 import com.mindflow.nova.ui.theme.NovaTextSecondary
-import kotlinx.coroutines.launch
 
 private enum class TruthPhase { ANSWERING, ANSWERED }
 private enum class TruthStage { IN_PROGRESS, SUBMITTING, OUT_OF_PLUMAS, COMPLETED, SUBMIT_ERROR, REJECTED }
@@ -84,24 +84,24 @@ fun TrueFalseLessonScreen(
     // Las plumas las define el backend por misión; la constante solo es
     // respaldo por si la API todavía no manda el campo.
     val maxPlumas = mission.maxPlumas ?: LESSON_MAX_PLUMAS
-    val scope = rememberCoroutineScope()
 
-    var currentIndex by remember { mutableStateOf(0) }
-    var selectedAnswer by remember { mutableStateOf<Boolean?>(null) }
-    var phase by remember { mutableStateOf(TruthPhase.ANSWERING) }
-    var plumas by remember { mutableStateOf(maxPlumas) }
-    var correctCount by remember { mutableStateOf(0) }
-    var stage by remember { mutableStateOf(TruthStage.IN_PROGRESS) }
-    var showExitConfirmation by remember { mutableStateOf(false) }
-    var attemptResult by remember { mutableStateOf<AttemptResult?>(null) }
-    var pendingNotice by remember { mutableStateOf(false) }
-    var rejectedMessage by remember { mutableStateOf("") }
-    val answers = remember { mutableStateListOf<AnswerSubmission>() }
+    var currentIndex by rememberSaveable { mutableStateOf(0) }
+    var selectedAnswer by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var phase by rememberSaveable { mutableStateOf(TruthPhase.ANSWERING) }
+    var plumas by rememberSaveable { mutableStateOf(maxPlumas) }
+    var correctCount by rememberSaveable { mutableStateOf(0) }
+    var stage by rememberSaveable { mutableStateOf(TruthStage.IN_PROGRESS) }
+    var showExitConfirmation by rememberSaveable { mutableStateOf(false) }
+    var attemptResult by rememberSaveable(stateSaver = jsonStateSaver<AttemptResult?>()) { mutableStateOf<AttemptResult?>(null) }
+    var pendingNotice by rememberSaveable { mutableStateOf(false) }
+    var rejectedMessage by rememberSaveable { mutableStateOf("") }
+    var answers by rememberSaveable(stateSaver = jsonStateSaver<List<AnswerSubmission>>()) { mutableStateOf(emptyList()) }
     val haptic = LocalHapticFeedback.current
 
-    fun finish() {
-        stage = TruthStage.SUBMITTING
-        scope.launch {
+    fun finish() { stage = TruthStage.SUBMITTING }
+
+    LaunchedEffect(stage) {
+        if (stage == TruthStage.SUBMITTING) {
             val outcome = attempt.submit(answers.toList(), false)
             val result = outcome.savedResult
             when {
@@ -139,7 +139,7 @@ fun TrueFalseLessonScreen(
         when (stage) {
             TruthStage.SUBMITTING -> LessonSubmitting()
 
-            TruthStage.SUBMIT_ERROR -> LessonSubmitError(onRetry = attempt.onRetry, onExit = onExit)
+            TruthStage.SUBMIT_ERROR -> LessonSubmitError(onRetry = { finish() }, onExit = onExit)
 
             TruthStage.REJECTED -> LessonRejected(message = rejectedMessage, onRetry = attempt.onRetry, onExit = onExit)
 
@@ -297,7 +297,7 @@ fun TrueFalseLessonScreen(
                         onClick = {
                             if (phase == TruthPhase.ANSWERING) {
                                 val optionId = if (selectedAnswer == true) question.trueOptionId else question.falseOptionId
-                                answers.add(AnswerSubmission(questionId = question.id, selectedOptionId = optionId))
+                                answers = answers + AnswerSubmission(questionId = question.id, selectedOptionId = optionId)
                                 if (isCorrectSelection) {
                                     correctCount++
                                 } else {

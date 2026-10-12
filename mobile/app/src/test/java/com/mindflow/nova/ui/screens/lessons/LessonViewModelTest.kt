@@ -28,7 +28,7 @@ class LessonViewModelTest {
 
     private val question = MissionQuestion(
         id = 1, prompt = "¿Verdadero?", type = "true_false", feedback = null, orderIndex = 1, points = 10,
-        options = listOf(MissionOption(id = 1, text = "Verdadero", isCorrect = true, feedback = null, orderIndex = 1))
+        options = listOf(MissionOption(id = 1, text = "Verdadero", isCorrect = true, feedback = null, orderIndex = 1), MissionOption(id = 2, text = "Falso", isCorrect = false, feedback = null, orderIndex = 2))
     )
 
     private fun content(id: Int, questions: List<MissionQuestion> = listOf(question)) = MissionContent(
@@ -67,12 +67,13 @@ class LessonViewModelTest {
     private var clock = 1_000_000L
     private var nextId = 0
 
-    private fun viewModel() = LessonViewModel(
+    private fun viewModel(savedState: androidx.lifecycle.SavedStateHandle = androidx.lifecycle.SavedStateHandle(), snapshots: com.mindflow.nova.data.local.LocalStore? = null, userId: Int? = null) = LessonViewModel(
         repository = repo,
         recorder = recorder,
         now = { clock },
         newId = { "intento-${++nextId}" },
-        tzOffset = { -360 }
+        tzOffset = { -360 },
+        savedState = savedState, snapshotStore = snapshots, currentUserId = { userId }
     )
 
     @Before
@@ -291,5 +292,43 @@ class LessonViewModelTest {
 
         assertEquals(LessonOutcome.SaveFailed, viewModel.finishAttempt(emptyList(), timedOut = false))
         assertTrue(recorder.recorded.isEmpty())
+    }
+
+    @Test
+    fun `recrear conserva id contenido original reloj y potenciador`() = runTest {
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        val first = viewModel(handle, local, 7)
+        first.open(3)
+        val playing = first.state.value as LessonState.Playing
+        first.buyExtraTime()
+        clock += 10_000
+        first.pauseClock()
+        clock += 30_000
+        val restoredHandle = androidx.lifecycle.SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
+        repo.contentResult = { MissionContentResult.Failed("sin red") }
+        val restored = viewModel(restoredHandle, local, 7)
+        restored.open(3)
+        assertEquals(playing, restored.state.value)
+        assertEquals(1, repo.contentCalls)
+        restored.resumeClock()
+        restored.finishAttempt(emptyList(), false)
+        val finished = recorder.recorded.single()
+        assertEquals(playing.attemptId, finished.clientAttemptId)
+        assertEquals(1_000_000L, finished.startedAtMs)
+        assertEquals(30, finished.pausedSeconds)
+        assertTrue(finished.usedExtraTime)
+    }
+
+    @Test
+    fun `otra cuenta no restaura un intento ajeno`() = runTest {
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        val first = viewModel(handle, local, 7)
+        first.open(3)
+        val second = viewModel(handle, local, 8)
+        second.open(3)
+        assertEquals(2, nextId)
+        assertFalse((first.state.value as LessonState.Playing).attemptId == (second.state.value as LessonState.Playing).attemptId)
     }
 }

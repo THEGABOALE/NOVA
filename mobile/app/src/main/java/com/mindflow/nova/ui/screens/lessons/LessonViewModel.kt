@@ -1,8 +1,16 @@
 package com.mindflow.nova.ui.screens.lessons
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.mindflow.nova.AppServices
+import com.mindflow.nova.data.local.LocalStore
+import com.mindflow.nova.data.local.localOrNull
+import com.mindflow.nova.data.diagnostics.NovaTelemetry
+import com.mindflow.nova.data.diagnostics.ProductEvent
 import com.mindflow.nova.data.mission.MissionContentResult
 import com.mindflow.nova.data.mission.MissionRepository
 import com.mindflow.nova.data.mission.RemoteMissionRepository
@@ -20,7 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-internal const val EMPTY_MISSION_MESSAGE = "Esta misión todavía no tiene preguntas. Vuelve a intentarlo más tarde."
+internal const val EMPTY_MISSION_MESSAGE = "Esta misión no tiene contenido compatible con esta versión de NOVA. Vuelve a intentarlo más tarde."
 
 sealed class LessonState {
     /** Se está pidiendo el contenido. */
@@ -56,7 +64,10 @@ class LessonViewModel(
     ),
     private val now: () -> Long = System::currentTimeMillis,
     private val newId: () -> String = { UUID.randomUUID().toString() },
-    private val tzOffset: () -> Int = ::currentTzOffsetMinutes
+    private val tzOffset: () -> Int = ::currentTzOffsetMinutes,
+    private val savedState: SavedStateHandle = SavedStateHandle(),
+    private val snapshotStore: LocalStore? = null,
+    private val currentUserId: () -> Int? = { null }
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<LessonState>(LessonState.Loading)
@@ -72,6 +83,8 @@ class LessonViewModel(
     private var pausedAtMs: Long? = null
     private var pausedTotalMs = 0L
     private var usedExtraTime = false
+    private var attemptTzOffset = 0
+    private var ownerId: Int? = null
 
     /** Carga la misión y empieza su primer intento. Llamarlo de nuevo con la misma misión no hace nada. */
     fun open(missionId: Int) {
@@ -82,6 +95,29 @@ class LessonViewModel(
         _state.value = LessonState.Loading
 
         viewModelScope.launch {
+            ownerId = currentUserId()
+            val restoredId = savedState.get<String>("attemptId")
+            val canRestore = savedState.get<Int>("missionId") == missionId &&
+                savedState.get<Int>("userId") == ownerId && restoredId != null
+            if (canRestore) {
+                val restoredContent = if (snapshotStore != null && ownerId != null) {
+                    localOrNull { snapshotStore.activeLesson(ownerId!!, restoredId!!) }
+                } else null
+                if (restoredContent != null && restoredContent.id == missionId && restoredContent.hasPlayableContent()) {
+                    content = restoredContent
+                    attemptNumber = savedState["attemptNumber"] ?: 1
+                    startedAtMs = savedState["startedAtMs"] ?: now()
+                    pausedAtMs = savedState["pausedAtMs"]
+                    pausedTotalMs = savedState["pausedTotalMs"] ?: 0L
+                    usedExtraTime = savedState["usedExtraTime"] ?: false
+                    attemptTzOffset = savedState["tzOffset"] ?: tzOffset()
+                    _state.value = LessonState.Playing(restoredContent, restoredId!!, attemptNumber)
+                    return@launch
+                }
+                // No reiniciar con respuestas guardadas contra contenido nuevo.
+                _state.value = LessonState.Error("No pudimos recuperar esta misión. Vuelve a abrirla para iniciar un intento nuevo.")
+                return@launch
+            }
             when (val result = repository.loadContent(missionId)) {
                 is MissionContentResult.Failed -> _state.value = LessonState.Error(result.message)
                 is MissionContentResult.Loaded -> if (!result.content.hasPlayableContent()) {
@@ -100,12 +136,13 @@ class LessonViewModel(
      */
     fun retry() {
         val content = content ?: return
-        startAttempt(content)
+        viewModelScope.launch { startAttempt(content) }
     }
 
     /** La app pasó a segundo plano: el reloj del intento se detiene. Repetirlo no cuenta doble. */
     fun pauseClock() {
         if (pausedAtMs == null) pausedAtMs = now()
+        saveClock()
     }
 
     /**
@@ -117,8 +154,9 @@ class LessonViewModel(
     fun resumeClock(): Int {
         val since = pausedAtMs ?: return 0
         val overCapBefore = secondsOverPauseCap(pausedTotalMs)
-        pausedTotalMs += now() - since
+        pausedTotalMs += (now() - since).coerceAtLeast(0L)
         pausedAtMs = null
+        saveClock()
         return secondsOverPauseCap(pausedTotalMs) - overCapBefore
     }
 
@@ -128,16 +166,20 @@ class LessonViewModel(
     /** El estudiante compró el "+30 s" en este intento. Se cobra al guardarlo. */
     fun buyExtraTime() {
         usedExtraTime = true
+        saveClock()
     }
 
     /** Guarda el intento en curso y dice cómo quedó: subido, pendiente, rechazado o sin guardar. */
     suspend fun finishAttempt(answers: List<AnswerSubmission>, timedOut: Boolean): LessonOutcome {
         val playing = _state.value as? LessonState.Playing ?: return LessonOutcome.SaveFailed
-        val finishedAtMs = now()
+        if (currentUserId() != ownerId) return LessonOutcome.SaveFailed
+        // Un reenvío tras recrear el proceso sigue siendo el mismo intento,
+        // con el mismo fin; no consume tiempo mientras se guarda/sincroniza.
+        val finishedAtMs = savedState.get<Long>("finishedAtMs") ?: now().also { savedState["finishedAtMs"] = it }
         // Si termina estando en pausa, la pausa cuenta hasta el final.
         val pausedMs = pausedTotalMs + (pausedAtMs?.let { finishedAtMs - it } ?: 0L)
 
-        return recorder.record(
+        val outcome = recorder.record(
             FinishedAttempt(
                 clientAttemptId = playing.attemptId,
                 content = playing.content,
@@ -145,19 +187,72 @@ class LessonViewModel(
                 timedOut = timedOut,
                 startedAtMs = startedAtMs,
                 finishedAtMs = finishedAtMs,
-                tzOffsetMinutes = tzOffset(),
+                tzOffsetMinutes = attemptTzOffset,
                 pausedSeconds = (pausedMs / 1000).toInt(),
                 usedExtraTime = usedExtraTime
             )
         )
+        if (outcome.savedResult != null && savedState.get<Boolean>("finishTracked") != true) {
+            NovaTelemetry.record(if (outcome.savedResult?.status == "completed") ProductEvent.LESSON_COMPLETED else ProductEvent.LESSON_FAILED)
+            if (outcome is LessonOutcome.Pending) NovaTelemetry.record(ProductEvent.OFFLINE_ATTEMPT_CREATED)
+            savedState["finishTracked"] = true
+        }
+        return outcome
     }
 
-    private fun startAttempt(content: MissionContent) {
+    private suspend fun startAttempt(content: MissionContent) {
+        val id = newId()
+        try {
+            ownerId?.let { userId ->
+                snapshotStore?.clearActiveLessons(userId)
+                snapshotStore?.saveActiveLesson(userId, id, content)
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _state.value = LessonState.Error("No pudimos guardar la misión en este dispositivo. Libera espacio y vuelve a intentarlo.")
+            return
+        }
         attemptNumber += 1
         startedAtMs = now()
         pausedAtMs = null
         pausedTotalMs = 0L
         usedExtraTime = false
-        _state.value = LessonState.Playing(content, newId(), attemptNumber)
+        attemptTzOffset = tzOffset()
+        savedState["missionId"] = content.id
+        savedState["userId"] = ownerId
+        savedState["attemptId"] = id
+        savedState["attemptNumber"] = attemptNumber
+        savedState["startedAtMs"] = startedAtMs
+        savedState.remove<Long>("finishedAtMs")
+        savedState.remove<Boolean>("finishTracked")
+        savedState["tzOffset"] = attemptTzOffset
+        saveClock()
+        _state.value = LessonState.Playing(content, id, attemptNumber)
+        NovaTelemetry.record(ProductEvent.LESSON_STARTED)
+    }
+
+    fun abandon() {
+        if (_state.value is LessonState.Playing && savedState.get<Long>("finishedAtMs") == null) {
+            NovaTelemetry.record(ProductEvent.MISSION_ABANDONED)
+        }
+    }
+
+    private fun saveClock() {
+        savedState["pausedAtMs"] = pausedAtMs
+        savedState["pausedTotalMs"] = pausedTotalMs
+        savedState["usedExtraTime"] = usedExtraTime
+    }
+
+    companion object {
+        val Factory = viewModelFactory {
+            initializer {
+                LessonViewModel(
+                    savedState = createSavedStateHandle(),
+                    snapshotStore = AppServices.localStore,
+                    currentUserId = { AppServices.session.currentUserId() }
+                )
+            }
+        }
     }
 }

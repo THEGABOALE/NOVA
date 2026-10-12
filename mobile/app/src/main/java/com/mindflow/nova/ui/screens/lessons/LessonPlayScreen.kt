@@ -28,12 +28,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.mindflow.nova.ui.components.jsonStateSaver
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,7 +67,6 @@ import com.mindflow.nova.ui.theme.NovaSuccessBackground
 import com.mindflow.nova.ui.theme.NovaPurple
 import com.mindflow.nova.ui.theme.NovaText
 import com.mindflow.nova.ui.theme.NovaTextSecondary
-import kotlinx.coroutines.launch
 
 private enum class QuestionPhase { ANSWERING, ANSWERED }
 private enum class LessonStage { IN_PROGRESS, SUBMITTING, OUT_OF_PLUMAS, COMPLETED, SUBMIT_ERROR, REJECTED }
@@ -87,27 +87,28 @@ fun LessonPlayScreen(
     // Las plumas las define el backend por misión; la constante solo es
     // respaldo por si la API todavía no manda el campo.
     val maxPlumas = mission.maxPlumas ?: LESSON_MAX_PLUMAS
-    val scope = rememberCoroutineScope()
 
-    var currentIndex by remember { mutableStateOf(0) }
-    var selectedOptionId by remember { mutableStateOf<Int?>(null) }
-    var phase by remember { mutableStateOf(QuestionPhase.ANSWERING) }
-    var plumas by remember { mutableStateOf(maxPlumas) }
-    var correctCount by remember { mutableStateOf(0) }
-    var stage by remember { mutableStateOf(LessonStage.IN_PROGRESS) }
-    var showExitConfirmation by remember { mutableStateOf(false) }
-    var attemptResult by remember { mutableStateOf<AttemptResult?>(null) }
-    var pendingNotice by remember { mutableStateOf(false) }
-    var rejectedMessage by remember { mutableStateOf("") }
-    val answers = remember { mutableStateListOf<AnswerSubmission>() }
+    var currentIndex by rememberSaveable { mutableStateOf(0) }
+    var selectedOptionId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var phase by rememberSaveable { mutableStateOf(QuestionPhase.ANSWERING) }
+    var plumas by rememberSaveable { mutableStateOf(maxPlumas) }
+    var correctCount by rememberSaveable { mutableStateOf(0) }
+    var stage by rememberSaveable { mutableStateOf(LessonStage.IN_PROGRESS) }
+    var showExitConfirmation by rememberSaveable { mutableStateOf(false) }
+    var attemptResult by rememberSaveable(stateSaver = jsonStateSaver<AttemptResult?>()) { mutableStateOf<AttemptResult?>(null) }
+    var pendingNotice by rememberSaveable { mutableStateOf(false) }
+    var rejectedMessage by rememberSaveable { mutableStateOf("") }
+    var answers by rememberSaveable(stateSaver = jsonStateSaver<List<AnswerSubmission>>()) { mutableStateOf(emptyList()) }
     // Se mezcla una sola vez por intento: si se mezclara en cada recomposición,
     // las opciones cambiarían de lugar mientras el estudiante elige.
-    val shuffledQuestions = remember(questions) { questions.withShuffledOptions() }
+    val shuffleSeed = rememberSaveable { kotlin.random.Random.nextLong() }
+    val shuffledQuestions = remember(questions, shuffleSeed) { questions.withShuffledOptions(kotlin.random.Random(shuffleSeed)) }
     val haptic = LocalHapticFeedback.current
 
-    fun finish() {
-        stage = LessonStage.SUBMITTING
-        scope.launch {
+    fun finish() { stage = LessonStage.SUBMITTING }
+
+    LaunchedEffect(stage) {
+        if (stage == LessonStage.SUBMITTING) {
             val outcome = attempt.submit(answers.toList(), false)
             val result = outcome.savedResult
             when {
@@ -145,7 +146,7 @@ fun LessonPlayScreen(
         when (stage) {
             LessonStage.SUBMITTING -> LessonSubmitting()
 
-            LessonStage.SUBMIT_ERROR -> LessonSubmitError(onRetry = attempt.onRetry, onExit = onExit)
+            LessonStage.SUBMIT_ERROR -> LessonSubmitError(onRetry = { finish() }, onExit = onExit)
 
             LessonStage.REJECTED -> LessonRejected(message = rejectedMessage, onRetry = attempt.onRetry, onExit = onExit)
 
@@ -235,7 +236,7 @@ fun LessonPlayScreen(
                         onClick = {
                             if (phase == QuestionPhase.ANSWERING) {
                                 selectedOption?.let { option ->
-                                    answers.add(AnswerSubmission(questionId = question.id, selectedOptionId = option.id))
+                                    answers = answers + AnswerSubmission(questionId = question.id, selectedOptionId = option.id)
                                     if (option.isCorrect) {
                                         correctCount++
                                     } else {
