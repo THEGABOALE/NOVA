@@ -1,6 +1,9 @@
 const pool = require("../database/connection");
 const levelRepository = require("../repositories/level.repository");
 const { respondServerError } = require("../utils/server-error");
+const cache = require("../services/cache.service");
+const LEVELS_CACHE_KEY = "nova:levels:published:v1";
+const LEVELS_CACHE_TTL_SECONDS = 15 * 60;
 
 // Agrupa las filas (una por mision) en niveles con su lista de misiones.
 const levelsFromRows = (rows) => {
@@ -40,10 +43,28 @@ const levelsFromRows = (rows) => {
 
 const getLevels = async (req, res) => {
   try {
+    const cachedLevels = await cache.getJson(LEVELS_CACHE_KEY);
+
+    if (cachedLevels) {
+      return res.json(cachedLevels);
+    }
+
     const rows = await levelRepository.findLevelsWithMissions(pool);
-    res.json(levelsFromRows(rows));
+    const levels = levelsFromRows(rows);
+
+    await cache.setJson(
+      LEVELS_CACHE_KEY,
+      levels,
+      LEVELS_CACHE_TTL_SECONDS
+    );
+
+    return res.json(levels);
   } catch (error) {
-    return respondServerError(res, "Error al obtener los niveles educativos", error);
+    return respondServerError(
+      res,
+      "Error al obtener los niveles educativos",
+      error
+    );
   }
 };
 
