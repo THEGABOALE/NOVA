@@ -1,5 +1,5 @@
 # Cabeceras de la landing (Cloudflare Workers Static Assets). Aplican en
-# novamindflow.com, www y workers.dev.
+# novamindflow.com, www y las vistas previas de workers.dev.
 #
 # La página solo carga lo propio, la tipografía de Fontshare (el CSS viene de
 # api.fontshare.com y las fuentes de cdn.fontshare.com) y el script de
@@ -16,3 +16,11 @@
 # pueden guardar en caché un año sin riesgo de servir una versión vieja.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Agenor Neue tiene licencia para un solo dominio: solo la pueden cargar páginas
+# del mismo origen (sin Access-Control-Allow-Origin, otro sitio tampoco puede
+# usarla en un @font-face). El nombre no lleva hash, así que la caché es de 30
+# días y no "immutable".
+/fonts/*
+  Cross-Origin-Resource-Policy: same-origin
+  Cache-Control: public, max-age=2592000

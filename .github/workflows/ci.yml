@@ -86,6 +86,17 @@ jobs:
           cache: "npm"
           cache-dependency-path: landing/package-lock.json
 
+      # Los webfonts con licencia se descargan de R2 en el build de producción y
+      # no pueden versionarse en este repo público (ni con `git add -f`).
+      - name: Webfonts con licencia fuera de Git
+        run: |
+          tracked="$(git ls-files public/fonts/)"
+          if [ -n "$tracked" ]; then
+            echo "::error::Los webfonts con licencia no pueden versionarse:"
+            echo "$tracked"
+            exit 1
+          fi
+
       - run: npm ci
       - run: npm run test
       - run: npm run lint

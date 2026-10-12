@@ -12,14 +12,17 @@
 
   // Dominio propio (registrado en esta misma cuenta de Cloudflare). Cada deploy
   // lo mantiene conectado; Cloudflare crea el DNS y el certificado solo.
-  // nova.mindflow16.workers.dev sigue activo como respaldo.
   "routes": [
     { "pattern": "novamindflow.com", "custom_domain": true },
     { "pattern": "www.novamindflow.com", "custom_domain": true }
   ],
-  // Explícito: con routes, workers.dev podría apagarse por defecto, y las
-  // vistas previas de cada PR lo usan.
-  "workers_dev": true,
+  // Producción se sirve solo en el dominio propio: el webfont de Agenor Neue
+  // tiene licencia para un dominio y no debe quedar también en
+  // nova.mindflow16.workers.dev. Las vistas previas de cada rama siguen en
+  // workers.dev porque preview_urls va explícito; si se omitiera, seguiría a
+  // workers_dev y quedarían apagadas.
+  "workers_dev": false,
+  "preview_urls": true,
 
   "previews": {}
 }

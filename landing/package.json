@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepare:licensed-assets": "node scripts/prepare-licensed-assets.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

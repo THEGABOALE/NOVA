@@ -15,6 +15,10 @@ dist-ssr
 # Estado local de wrangler dev
 .wrangler
 
+# Webfonts con licencia: se descargan de R2 privado en el build de producción
+# (scripts/prepare-licensed-assets.mjs) y no pueden versionarse.
+public/fonts/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
