@@ -48,7 +48,12 @@ const env = {
     port: process.env.DB_PORT || 5432,
     name: process.env.DB_NAME,
     user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD
+    password: process.env.DB_PASSWORD,
+  },
+
+  redis: {
+    enabled: process.env.REDIS_ENABLED === "true",
+    url: process.env.REDIS_URL || "redis://127.0.0.1:6379"
   },
 
   auth: {
