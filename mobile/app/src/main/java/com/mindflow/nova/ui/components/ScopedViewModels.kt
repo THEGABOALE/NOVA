@@ -4,6 +4,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -21,9 +22,11 @@ fun ScopedViewModels(content: @Composable () -> Unit) {
     // del ViewModelStore. El dueño anterior no podía restaurar SavedStateHandle.
     val controller = rememberNavController()
     val entry by controller.currentBackStackEntryAsState()
+    val store by rememberUpdatedState(entry?.viewModelStore)
     val activity = LocalActivity.current
-    DisposableEffect(entry) {
-        val store = entry?.viewModelStore
+    // Se limpia solo cuando el bloque sale de pantalla. Atarlo a cada emisión
+    // de la entrada limpiaba el ViewModel recién creado mientras seguía en uso.
+    DisposableEffect(Unit) {
         onDispose {
             if (activity?.isChangingConfigurations != true) store?.clear()
         }

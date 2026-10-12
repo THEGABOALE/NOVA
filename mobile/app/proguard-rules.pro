@@ -5,3 +5,5 @@
 -keep class com.google.gson.reflect.TypeToken { *; }
 -keep class * extends com.google.gson.reflect.TypeToken
 -keepclassmembers class kotlin.Pair { *; }
+# Cuerpos de error del backend que se leen con Gson fuera de data.model.
+-keep class com.mindflow.nova.data.**ApiError { *; }
