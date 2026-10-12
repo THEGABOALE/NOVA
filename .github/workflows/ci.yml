@@ -1,7 +1,8 @@
 name: CI
 
-# Corre los tests del backend y del móvil en cada push/PR a main, para que un
-# cambio que rompe algo se note antes de mergear en vez de después.
+# Valida el backend, el móvil y la landing en cada push/PR a main, para que un
+# cambio que rompe algo se note antes de mergear en vez de después. La landing
+# corre sus tests, el lint y el build.
 on:
   push:
     branches: [main]
