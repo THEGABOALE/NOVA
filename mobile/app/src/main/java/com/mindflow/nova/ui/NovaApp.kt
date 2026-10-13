@@ -26,8 +26,9 @@ import com.mindflow.nova.ui.components.ScopedViewModels
 import androidx.compose.runtime.Composable
 import com.mindflow.nova.ui.theme.isDark
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,9 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import com.mindflow.nova.AppServices
-import com.mindflow.nova.data.model.SessionUser
 import com.mindflow.nova.data.session.SessionRepository
-import com.mindflow.nova.data.session.SessionResult
 import com.mindflow.nova.data.session.ThemePreferences
 import com.mindflow.nova.ui.screens.auth.LoginScreen
 import com.mindflow.nova.ui.screens.auth.OnboardingScreen
@@ -57,46 +56,17 @@ import com.mindflow.nova.ui.theme.NovaText
 import com.mindflow.nova.ui.theme.NovaTextSecondary
 
 /**
- * Raíz de la app. Al arrancar valida el token guardado contra el backend
- * (GET /api/auth/me) y decide a dónde mandar a la persona:
- * - sin sesión válida -> [LoginScreen]
- * - estudiante sin sala todavía -> [OnboardingScreen] (splash + código)
- * - estudiante con sala -> [HomeScreen]
- * - docente -> [TeacherRoomsScreen]
- * - coordinador/admin -> todavía no tienen pantalla (falta su wireframe)
+ * Raíz de la app. Al arrancar el proceso valida el token guardado contra el
+ * backend (GET /api/auth/me) y decide a dónde mandar a la persona (ver
+ * [AppScreen]): [LoginScreen], [OnboardingScreen], [HomeScreen] o
+ * [TeacherRoomsScreen]. La pantalla decidida vive en [AppRouteViewModel], así
+ * que recrear la Activity no repite la validación.
  */
-private sealed class AppScreen {
-    object Loading : AppScreen()
-    object Login : AppScreen()
-    object Onboarding : AppScreen()
-    object StudentHome : AppScreen()
-    object TeacherHome : AppScreen()
-    data class Unsupported(val role: String) : AppScreen()
-
-    /** Hay sesión guardada pero no se pudo validar (sin red o backend caído): se reintenta, no se cierra. */
-    object ConnectionError : AppScreen()
-}
-
-private fun routeForUser(user: SessionUser): AppScreen = when (user.role) {
-    "student" -> if (user.group != null) AppScreen.StudentHome else AppScreen.Onboarding
-    "teacher" -> AppScreen.TeacherHome
-    else -> AppScreen.Unsupported(user.role)
-}
-
 @Composable
 fun NovaApp(session: SessionRepository, themePreferences: ThemePreferences) {
-    var screen by remember { mutableStateOf<AppScreen>(AppScreen.Loading) }
+    val route: AppRouteViewModel = viewModel { AppRouteViewModel(session::restoreSession) }
+    val screen by route.screen.collectAsState()
     var themeMode by remember { mutableStateOf(themePreferences.themeMode()) }
-    var restoreAttempt by remember { mutableStateOf(0) }
-
-    LaunchedEffect(restoreAttempt) {
-        screen = AppScreen.Loading
-        screen = when (val result = session.restoreSession()) {
-            is SessionResult.Success -> routeForUser(result.user)
-            is SessionResult.Failure -> AppScreen.ConnectionError
-            is SessionResult.Rejected -> AppScreen.Login
-        }
-    }
 
     // El tema elegido (o el del teléfono) se aplica al estudiante y al docente.
     // Login y onboarding quedan en claro: su arte de ondas es sobre fondo claro.
@@ -123,15 +93,15 @@ fun NovaApp(session: SessionRepository, themePreferences: ThemePreferences) {
                 onLoginSuccess = { user ->
                     // Si esta cuenta dejó resultados sin subir en este teléfono, se suben ahora.
                     AppServices.scheduleSync()
-                    screen = routeForUser(user)
+                    route.show(routeForUser(user))
                 }
             )
 
             AppScreen.Onboarding -> OnboardingScreen(
-                onJoined = { screen = AppScreen.StudentHome },
+                onJoined = { route.show(AppScreen.StudentHome) },
                 onLogout = {
                     session.logout()
-                    screen = AppScreen.Login
+                    route.show(AppScreen.Login)
                 }
             )
 
@@ -143,22 +113,22 @@ fun NovaApp(session: SessionRepository, themePreferences: ThemePreferences) {
                 },
                 onLogout = {
                     session.logout()
-                    screen = AppScreen.Login
+                    route.show(AppScreen.Login)
                 }
             ) } }
 
             AppScreen.TeacherHome -> key(session.currentUserId()) { ScopedViewModels { TeacherRoomsScreen(
                 onLogout = {
                     session.logout()
-                    screen = AppScreen.Login
+                    route.show(AppScreen.Login)
                 }
             ) } }
 
             AppScreen.ConnectionError -> ConnectionErrorScreen(
-                onRetry = { restoreAttempt++ },
+                onRetry = route::validate,
                 onLogout = {
                     session.logout()
-                    screen = AppScreen.Login
+                    route.show(AppScreen.Login)
                 }
             )
 
@@ -166,7 +136,7 @@ fun NovaApp(session: SessionRepository, themePreferences: ThemePreferences) {
                 role = current.role,
                 onLogout = {
                     session.logout()
-                    screen = AppScreen.Login
+                    route.show(AppScreen.Login)
                 }
             )
         }
