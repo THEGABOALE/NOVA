@@ -220,8 +220,6 @@ private fun LessonHostContent(
     viewModel: LessonViewModel = viewModel(factory = LessonViewModel.Factory)
 ) {
     val state by viewModel.state.collectAsState()
-    val exitLesson = { viewModel.abandon(); onExit() }
-    BackHandler(onBack = exitLesson)
 
     LaunchedEffect(mission.id) {
         viewModel.open(mission.id)
@@ -230,7 +228,7 @@ private fun LessonHostContent(
     when (val current = state) {
         LessonState.Loading -> LessonContentLoading()
 
-        is LessonState.Error -> LessonContentError(message = current.message, onExit = exitLesson)
+        is LessonState.Error -> LessonContentError(message = current.message, onExit = onExit)
 
         // Con key, cada reintento vuelve a montar la pantalla de la mecánica desde cero.
         is LessonState.Playing -> key(current.attemptNumber) {
@@ -254,7 +252,7 @@ private fun LessonHostContent(
                     mission = playableMission,
                     questions = current.content.toLessonQuestions(),
                     attempt = attempt,
-                    onExit = exitLesson
+                    onExit = onExit
                 )
 
                 "matching" -> MatchingLessonScreen(
@@ -262,14 +260,14 @@ private fun LessonHostContent(
                     pairs = current.content.toMatchingPairs(),
                     questionId = current.content.matchingQuestionId() ?: 0,
                     attempt = attempt,
-                    onExit = exitLesson
+                    onExit = onExit
                 )
 
                 "true_false" -> TrueFalseLessonScreen(
                     mission = playableMission,
                     questions = current.content.toTrueFalseQuestions(),
                     attempt = attempt,
-                    onExit = exitLesson
+                    onExit = onExit
                 )
 
                 else -> MiniGamePlaceholderScreen(mission = mission, onBack = onExit)

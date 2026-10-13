@@ -75,20 +75,24 @@ Validación de CI sin secretos:
 Un bundle sin firma sirve para validar la compilación; no es un release
 listo para distribuir. No configurar una firma debug para evitar el error.
 
-## Diagnóstico y métricas (activación externa pendiente)
+## Diagnóstico (activación externa pendiente)
 
 Sentry queda desactivado en debug y cuando `NOVA_SENTRY_DSN` está vacío.
 No se crearon cuentas ni proyectos externos. Antes de activarlo, configurar
 el proyecto para impedir almacenamiento de IP, limitar retención y accesos,
 y completar la política de privacidad del producto.
 
-La integración desactiva screenshots, jerarquía de vistas, breadcrumbs,
+Se usa `sentry-android-core`, sin las librerías nativas del NDK. La
+integración desactiva screenshots, jerarquía de vistas, breadcrumbs,
 tracing, sesiones automáticas y persistencia de scope. El filtro elimina
-usuario, request, extras, tags y mensajes de excepciones. Solo admite como
-texto los seis eventos cerrados de `ProductEvent`; no recibe parámetros,
-identificadores, respuestas, nombres ni correos. Conserva tipos y frames
-para diagnóstico. Los eventos no sirven para medir retención por usuario;
-permiten contar inicios, finales, abandonos y problemas de sincronización.
+usuario, request, extras, tags, el mensaje del evento y los mensajes de
+excepciones; conserva tipos y frames para diagnóstico.
+
+Sentry solo recibe crashes y errores. No se envían eventos de producto:
+Sentry los cuenta como errores y gastarían la cuota de crashes. Las
+lecciones terminadas, fallidas o subidas desde una cola offline ya quedan
+en `mission_attempts` en el servidor; si hace falta medir inicios o
+abandonos, se necesita una herramienta de métricas aparte.
 
 La compilación firmada usa `--no-configuration-cache` para no conservar la
 configuración de firma con credenciales. Usar lo mismo en builds firmados locales.

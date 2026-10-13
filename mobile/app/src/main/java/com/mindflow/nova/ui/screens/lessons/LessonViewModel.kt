@@ -9,8 +9,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.mindflow.nova.AppServices
 import com.mindflow.nova.data.local.LocalStore
 import com.mindflow.nova.data.local.localOrNull
-import com.mindflow.nova.data.diagnostics.NovaTelemetry
-import com.mindflow.nova.data.diagnostics.ProductEvent
 import com.mindflow.nova.data.mission.MissionContentResult
 import com.mindflow.nova.data.mission.MissionRepository
 import com.mindflow.nova.data.mission.RemoteMissionRepository
@@ -179,7 +177,7 @@ class LessonViewModel(
         // Si termina estando en pausa, la pausa cuenta hasta el final.
         val pausedMs = pausedTotalMs + (pausedAtMs?.let { finishedAtMs - it } ?: 0L)
 
-        val outcome = recorder.record(
+        return recorder.record(
             FinishedAttempt(
                 clientAttemptId = playing.attemptId,
                 content = playing.content,
@@ -192,12 +190,6 @@ class LessonViewModel(
                 usedExtraTime = usedExtraTime
             )
         )
-        if (outcome.savedResult != null && savedState.get<Boolean>("finishTracked") != true) {
-            NovaTelemetry.record(if (outcome.savedResult?.status == "completed") ProductEvent.LESSON_COMPLETED else ProductEvent.LESSON_FAILED)
-            if (outcome is LessonOutcome.Pending) NovaTelemetry.record(ProductEvent.OFFLINE_ATTEMPT_CREATED)
-            savedState["finishTracked"] = true
-        }
-        return outcome
     }
 
     private suspend fun startAttempt(content: MissionContent) {
@@ -225,17 +217,9 @@ class LessonViewModel(
         savedState["attemptNumber"] = attemptNumber
         savedState["startedAtMs"] = startedAtMs
         savedState.remove<Long>("finishedAtMs")
-        savedState.remove<Boolean>("finishTracked")
         savedState["tzOffset"] = attemptTzOffset
         saveClock()
         _state.value = LessonState.Playing(content, id, attemptNumber)
-        NovaTelemetry.record(ProductEvent.LESSON_STARTED)
-    }
-
-    fun abandon() {
-        if (_state.value is LessonState.Playing && savedState.get<Long>("finishedAtMs") == null) {
-            NovaTelemetry.record(ProductEvent.MISSION_ABANDONED)
-        }
     }
 
     private fun saveClock() {

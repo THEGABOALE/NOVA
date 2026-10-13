@@ -120,7 +120,8 @@ val verifyReleaseConfiguration = tasks.register<VerifyReleaseConfiguration>("ver
 tasks.matching { it.name == "preReleaseBuild" }.configureEach { dependsOn(verifyReleaseConfiguration) }
 
 dependencies {
-    implementation("io.sentry:sentry-android:8.24.0")
+    // Solo el SDK de Android: sin las librerías nativas de sentry-android-ndk.
+    implementation("io.sentry:sentry-android-core:8.24.0")
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
     // Guarda el token de sesión cifrado en el dispositivo.

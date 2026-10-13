@@ -33,8 +33,8 @@ class TelemetryPrivacyTest {
         assertFalse(event.contexts.containsKey("lesson"))
     }
 
-    @Test fun onlyKnownProductEventNamesAreKept() {
+    @Test fun noMessageSurvivesEvenIfItLooksHarmless() {
         val event = SentryEvent().apply { message = Message().apply { formatted = "lesson_completed" } }
-        assertEquals("lesson_completed", sanitizeEvent(event).message?.formatted)
+        assertNull(sanitizeEvent(event).message)
     }
 }

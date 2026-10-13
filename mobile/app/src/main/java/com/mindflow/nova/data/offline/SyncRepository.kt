@@ -90,10 +90,7 @@ class SyncRepository(
         for (batch in pending.chunked(MAX_BATCH)) {
             val stop = sendBatch(userId, token, batch, accepted, rejected) { progress = it }
 
-            if (stop != null) {
-                com.mindflow.nova.data.diagnostics.NovaTelemetry.record(com.mindflow.nova.data.diagnostics.ProductEvent.SYNC_FAILED)
-                return@withLock SyncReport(accepted, rejected, progress, stop)
-            }
+            if (stop != null) return@withLock SyncReport(accepted, rejected, progress, stop)
         }
 
         SyncReport(accepted, rejected, progress, stoppedBy = null)
