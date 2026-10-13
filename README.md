@@ -234,7 +234,7 @@ La URL de la API depende del tipo de build:
 - **debug:** `http://10.0.2.2:3000/`, que desde el emulador apunta al backend local de la computadora.
 - **release:** el backend desplegado en Railway.
 
-Para probar contra el backend local basta con levantarlo con `npm run dev` y correr la app en el emulador. Para una demo en un teléfono se instala el build release, que se firma con la clave de debug y no sirve para publicar en Play Store.
+Para probar contra el backend local basta con levantarlo con `pnpm run dev` y correr la app en el emulador. Para una demo en un teléfono se instala el build release, que se firma con la clave de debug y no sirve para publicar en Play Store.
 
 Tests unitarios, desde `mobile/`:
 
