@@ -13,10 +13,18 @@ import kotlinx.coroutines.launch
 
 data class TeacherRoomsState(val loading: Boolean = true, val rooms: List<TeacherRoom> = emptyList(), val error: String? = null)
 
+/**
+ * Carga las salas al crearse. Como el ViewModel sobrevive a girar el teléfono,
+ * la rotación no vuelve a pedir el roster; "Actualizar" y "Reintentar" sí.
+ */
 class TeacherRoomsViewModel(private val repository: TeacherRepository = RemoteTeacherRepository()) : ViewModel() {
     private val mutableState = MutableStateFlow(TeacherRoomsState())
     val state = mutableState.asStateFlow()
     private var job: Job? = null
+
+    init {
+        refresh()
+    }
 
     fun refresh() {
         job?.cancel()
