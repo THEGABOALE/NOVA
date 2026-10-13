@@ -105,7 +105,12 @@ class LessonViewModel(
                     content = restoredContent
                     attemptNumber = savedState["attemptNumber"] ?: 1
                     startedAtMs = savedState["startedAtMs"] ?: now()
+                    // Si el proceso murió con el reloj corriendo (en Android 7 y 8
+                    // el estado se guarda antes de ON_STOP, así que la pausa pudo no
+                    // quedar anotada), lo que pasó desde el último segundo jugado
+                    // fue fuera de la app: cuenta como pausa.
                     pausedAtMs = savedState["pausedAtMs"]
+                        ?: savedState.get<Long>(LAST_TICK).takeIf { savedState.get<Long>("finishedAtMs") == null }
                     pausedTotalMs = savedState["pausedTotalMs"] ?: 0L
                     usedExtraTime = savedState["usedExtraTime"] ?: false
                     attemptTzOffset = savedState["tzOffset"] ?: tzOffset()
@@ -154,8 +159,18 @@ class LessonViewModel(
         val overCapBefore = secondsOverPauseCap(pausedTotalMs)
         pausedTotalMs += (now() - since).coerceAtLeast(0L)
         pausedAtMs = null
+        savedState[LAST_TICK] = now()
         saveClock()
         return secondsOverPauseCap(pausedTotalMs) - overCapBefore
+    }
+
+    /**
+     * Pasó un segundo con el reloj corriendo. Se anota para que, si Android
+     * mata el proceso antes de registrar la pausa, el reloj se recupere desde
+     * el último segundo jugado y no desde que empezó el intento.
+     */
+    fun clockTick() {
+        if (pausedAtMs == null) savedState[LAST_TICK] = now()
     }
 
     private fun secondsOverPauseCap(pausedMs: Long): Int =
@@ -217,6 +232,7 @@ class LessonViewModel(
         savedState["attemptNumber"] = attemptNumber
         savedState["startedAtMs"] = startedAtMs
         savedState.remove<Long>("finishedAtMs")
+        savedState.remove<Long>(LAST_TICK)
         savedState["tzOffset"] = attemptTzOffset
         saveClock()
         _state.value = LessonState.Playing(content, id, attemptNumber)
@@ -229,6 +245,9 @@ class LessonViewModel(
     }
 
     companion object {
+        /** Último segundo jugado con el reloj corriendo (epoch ms). */
+        private const val LAST_TICK = "lastTickMs"
+
         val Factory = viewModelFactory {
             initializer {
                 LessonViewModel(

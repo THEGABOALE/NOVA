@@ -320,6 +320,109 @@ class LessonViewModelTest {
         assertTrue(finished.usedExtraTime)
     }
 
+    /** Lo que Android guarda del ViewModel, como si el proceso muriera y se recreara. */
+    private fun afterProcessDeath(handle: androidx.lifecycle.SavedStateHandle, local: com.mindflow.nova.data.local.LocalStore): LessonViewModel {
+        val restoredHandle = androidx.lifecycle.SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
+        repo.contentResult = { MissionContentResult.Failed("sin red") }
+        return viewModel(restoredHandle, local, 7).also { it.open(3) }
+    }
+
+    @Test
+    fun `si el proceso muere con el reloj corriendo lo de afuera cuenta como pausa`() = runTest {
+        // Android 7 y 8: el estado se guarda antes de ON_STOP, sin la pausa anotada.
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        viewModel(handle, local, 7).apply {
+            open(3)
+            clock += 20_000
+            clockTick()
+        }
+        clock += 60_000
+
+        val restored = afterProcessDeath(handle, local)
+
+        assertEquals(0, restored.resumeClock())
+        restored.finishAttempt(emptyList(), false)
+        assertEquals(60, recorder.recorded.single().pausedSeconds)
+    }
+
+    @Test
+    fun `una pausa ya anotada antes de morir el proceso no se cuenta dos veces`() = runTest {
+        // Android 9 en adelante: ON_STOP llega antes de guardar el estado.
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        viewModel(handle, local, 7).apply {
+            open(3)
+            clock += 20_000
+            clockTick()
+            clock += 500
+            pauseClock()
+        }
+        clock += 60_000
+
+        val restored = afterProcessDeath(handle, local)
+
+        restored.resumeClock()
+        restored.finishAttempt(emptyList(), false)
+        assertEquals(60, recorder.recorded.single().pausedSeconds)
+    }
+
+    @Test
+    fun `volver de una pausa no reusa el ultimo segundo de antes de pausar`() = runTest {
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        viewModel(handle, local, 7).apply {
+            open(3)
+            clockTick()
+            pauseClock()
+            clock += 40_000
+            resumeClock()
+        }
+        // Muere sin otro segundo jugado: solo cuenta lo que pasó desde que volvió.
+        clock += 10_000
+
+        val restored = afterProcessDeath(handle, local)
+
+        restored.resumeClock()
+        restored.finishAttempt(emptyList(), false)
+        assertEquals(50, recorder.recorded.single().pausedSeconds)
+    }
+
+    @Test
+    fun `el tope de pausa y el +30 s siguen al recrear el proceso`() = runTest {
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        viewModel(handle, local, 7).apply {
+            open(3)
+            buyExtraTime()
+            pauseClock()
+            clock += 200_000
+            resumeClock()
+            clockTick()
+            pauseClock()
+        }
+        clock += 150_000
+
+        val restored = afterProcessDeath(handle, local)
+
+        // 200 s + 150 s de pausa: los 300 s gratis se agotaron y 50 s corren como jugados.
+        assertEquals(50, restored.resumeClock())
+        restored.finishAttempt(emptyList(), false)
+        val finished = recorder.recorded.single()
+        assertEquals(350, finished.pausedSeconds)
+        assertTrue(finished.usedExtraTime)
+    }
+
+    @Test
+    fun `reanudar sin pausa no descuenta nada`() = runTest {
+        val viewModel = viewModel()
+        viewModel.open(3)
+
+        assertEquals(0, viewModel.resumeClock())
+        viewModel.finishAttempt(emptyList(), false)
+        assertEquals(0, recorder.recorded.single().pausedSeconds)
+    }
+
     @Test
     fun `otra cuenta no restaura un intento ajeno`() = runTest {
         val handle = androidx.lifecycle.SavedStateHandle()

@@ -162,6 +162,8 @@ class LessonAttempt(
     val onPauseClock: () -> Unit = {},
     /** Devuelve los segundos que la pausa pasó del tope gratis, para descontarlos del reloj. */
     val onResumeClock: () -> Int = { 0 },
+    /** Pasó un segundo jugado con el reloj corriendo. */
+    val onClockTick: () -> Unit = {},
     val onBuyExtraTime: () -> Unit = {},
     val seedBalance: Int = 0
 )
@@ -243,6 +245,7 @@ private fun LessonHostContent(
                 submit = viewModel::finishAttempt,
                 onPauseClock = viewModel::pauseClock,
                 onResumeClock = viewModel::resumeClock,
+                onClockTick = viewModel::clockTick,
                 onBuyExtraTime = viewModel::buyExtraTime,
                 seedBalance = seedBalance
             )

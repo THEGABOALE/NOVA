@@ -152,15 +152,24 @@ fun MatchingLessonScreen(
         }
     }
 
+    // El reloj se pausa cuando la misión deja de verse (ON_STOP: otra app
+    // encima, pantalla apagada, Inicio) y sigue al volver (ON_START). No se usa
+    // ON_PAUSE: también llega con la misión todavía visible (otra ventana con
+    // el foco en multiventana, un diálogo del sistema encima), y ahí el
+    // estudiante podría seguir mirando el tablero con el reloj parado.
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_PAUSE -> if (stage == MatchingStage.IN_PROGRESS && !clockPaused) {
+                Lifecycle.Event.ON_STOP -> if (stage == MatchingStage.IN_PROGRESS && !clockPaused) {
                     clockPaused = true
                     attempt.onPauseClock()
                 }
-                Lifecycle.Event.ON_RESUME -> if (clockPaused) {
+                // Siempre se le pregunta al ViewModel, aunque esta pantalla no
+                // haya visto la pausa: en Android 7 y 8 el estado se guarda antes
+                // de ON_STOP, y tras recrearse la pantalla cree que el reloj corría
+                // mientras el ViewModel lo tiene en pausa.
+                Lifecycle.Event.ON_START -> if (stage == MatchingStage.IN_PROGRESS) {
                     clockPaused = false
                     // Lo que pasó del tope de pausa gratis corre como jugado.
                     secondsLeft = (secondsLeft - attempt.onResumeClock()).coerceAtLeast(0)
@@ -175,7 +184,10 @@ fun MatchingLessonScreen(
     LaunchedEffect(Unit) {
         while (secondsLeft > 0 && stage == MatchingStage.IN_PROGRESS) {
             delay(1000)
-            if (!clockPaused) secondsLeft -= 1
+            if (!clockPaused) {
+                secondsLeft -= 1
+                attempt.onClockTick()
+            }
         }
         if (secondsLeft <= 0 && stage == MatchingStage.IN_PROGRESS) {
             finish(timedOut = true, targetStage = MatchingStage.TIME_UP)
