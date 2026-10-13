@@ -117,11 +117,9 @@ jobs:
           target: google_apis
           working-directory: mobile
           disable-animations: true
+          # El runner ejecuta cada línea por separado: el if va en una sola.
           script: |
-            if [ "${{ matrix.device }}" = "tablet" ]; then
-              adb shell settings put system accelerometer_rotation 0
-              adb shell settings put system user_rotation 1
-            fi
+            if [ "${{ matrix.device }}" = "tablet" ]; then adb shell settings put system accelerometer_rotation 0; adb shell settings put system user_rotation 1; fi
             ./gradlew connectedDebugAndroidTest --stacktrace
       - uses: actions/upload-artifact@v4
         if: always()
