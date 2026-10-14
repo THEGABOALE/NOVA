@@ -232,7 +232,10 @@ class LessonViewModel(
         savedState["attemptNumber"] = attemptNumber
         savedState["startedAtMs"] = startedAtMs
         savedState.remove<Long>("finishedAtMs")
-        savedState.remove<Long>(LAST_TICK)
+        // El reloj de relacionar conceptos corre desde el inicio del intento: si
+        // Android guarda el estado antes del primer segundo y antes de ON_STOP,
+        // la pausa se cuenta desde acá. Las misiones sin reloj no tienen referencia.
+        if (content.mechanic == "matching") savedState[LAST_TICK] = startedAtMs else savedState.remove<Long>(LAST_TICK)
         savedState["tzOffset"] = attemptTzOffset
         saveClock()
         _state.value = LessonState.Playing(content, id, attemptNumber)

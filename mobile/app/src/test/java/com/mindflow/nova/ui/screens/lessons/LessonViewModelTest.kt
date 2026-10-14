@@ -6,6 +6,7 @@ import com.mindflow.nova.data.model.AnswerSubmission
 import com.mindflow.nova.data.model.AttemptResult
 import com.mindflow.nova.data.model.MissionContent
 import com.mindflow.nova.data.model.MissionOption
+import com.mindflow.nova.data.model.MissionPair
 import com.mindflow.nova.data.model.MissionQuestion
 import com.mindflow.nova.data.offline.AttemptRecorder
 import com.mindflow.nova.data.offline.FinishedAttempt
@@ -344,6 +345,55 @@ class LessonViewModelTest {
         assertEquals(0, restored.resumeClock())
         restored.finishAttempt(emptyList(), false)
         assertEquals(60, recorder.recorded.single().pausedSeconds)
+    }
+
+    private fun matchingContent(id: Int) = content(
+        id,
+        listOf(
+            MissionQuestion(
+                id = 9, prompt = "Relaciona", type = "matching", feedback = null, orderIndex = 1, points = 10,
+                pairs = listOf(MissionPair(id = 1, term = "Igualdad", match = "Mismos derechos", orderIndex = 1))
+            )
+        )
+    ).copy(mechanic = "matching", timeLimitSeconds = 45)
+
+    /** Lo que Android guardó en ese momento, para recuperarlo tras matar el proceso. */
+    private fun snapshot(handle: androidx.lifecycle.SavedStateHandle) =
+        androidx.lifecycle.SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
+
+    @Test
+    fun `matching guardado antes del primer segundo y de ON_STOP cuenta la pausa desde el inicio`() = runTest {
+        // Android 7 y 8: el estado se guarda antes de ON_STOP, y acá también antes del primer tick.
+        repo.contentResult = { MissionContentResult.Loaded(matchingContent(it)) }
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        val first = viewModel(handle, local, 7)
+        first.open(3)
+        val saved = snapshot(handle)
+        // ON_STOP llega después de guardar: esta pausa no está en lo guardado.
+        first.pauseClock()
+        clock += 60_000
+
+        val restored = viewModel(saved, local, 7)
+        restored.open(3)
+
+        assertEquals(0, restored.resumeClock())
+        restored.finishAttempt(emptyList(), false)
+        assertEquals(60, recorder.recorded.single().pausedSeconds)
+    }
+
+    @Test
+    fun `sin reloj no se inventa una pausa al recuperar el proceso`() = runTest {
+        // Verdadero o falso no tiene reloj: no hay ticks ni referencia que convertir en pausa.
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        viewModel(handle, local, 7).open(3)
+        clock += 60_000
+
+        val restored = afterProcessDeath(handle, local)
+
+        restored.finishAttempt(emptyList(), false)
+        assertEquals(0, recorder.recorded.single().pausedSeconds)
     }
 
     @Test
