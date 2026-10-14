@@ -174,7 +174,7 @@ class LessonContentTest {
     @Test
     fun `una mision sin preguntas o sin pares no se puede jugar`() {
         val option = MissionOption(id = 1, text = "Verdadero", isCorrect = true, feedback = null, orderIndex = 1)
-        val withOption = MissionQuestion(id = 1, prompt = "P", type = "true_false", feedback = null, orderIndex = 1, points = 1, options = listOf(option))
+        val withOption = MissionQuestion(id = 1, prompt = "P", type = "true_false", feedback = null, orderIndex = 1, points = 1, options = listOf(option, option.copy(id = 2, text = "Falso", isCorrect = false)))
         val noOptions = withOption.copy(options = emptyList())
         val withPair = MissionQuestion(
             id = 2, prompt = "Relaciona", type = "matching", feedback = null, orderIndex = 1, points = 1,

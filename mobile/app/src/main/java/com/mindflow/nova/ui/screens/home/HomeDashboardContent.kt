@@ -83,7 +83,6 @@ fun HomeDashboardContent(
     val completedMissionIds = progress?.completedMissionIds?.toSet().orEmpty()
     val missionStates = computeMissionStates(missions, completedMissionIds)
     val currentIndex = currentMissionIndex(missionStates)
-    val nextMission = missions.getOrNull(currentIndex)
     val completedCount = missionStates.count { it.isCompleted }
     val levelProgressPercentage = levelProgressPercentage(level, progress)
 
@@ -136,7 +135,7 @@ fun HomeDashboardContent(
             )
         }
 
-        if (nextMission == null && missions.isNotEmpty()) {
+        if (missions.isNotEmpty() && missionStates.all { it.isCompleted }) {
             item {
                 RouteCompleteCard(onClick = onOpenLessons)
             }
@@ -409,7 +408,7 @@ private fun MissionRouteRow(
                 }
 
                 Text(
-                    text = mission.title,
+                    text = if (com.mindflow.nova.data.model.supportsMechanic(mission.mechanic)) mission.title else "${mission.title} · No disponible en esta versión",
                     color = if (state.isUnlocked) NovaText else NovaTextSecondary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
