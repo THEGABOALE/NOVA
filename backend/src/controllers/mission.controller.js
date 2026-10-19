@@ -247,6 +247,10 @@ const finishAttempt = async (req, res) => {
       };
     });
 
+    if (outcome.httpStatus === 200) {
+      await invalidateTeacherStudentsForStudent(pool, req.user.id);
+    }
+
     return res.status(outcome.httpStatus).json(outcome.body);
   } catch (error) {
     return respondServerError(res, "Error al cerrar el intento", error);

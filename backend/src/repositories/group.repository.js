@@ -241,6 +241,23 @@ const findCenterRooms = async (db, centerId) => {
   return result.rows;
 };
 
+const findTeacherIdsByStudent = async (db, studentId) => {
+  const result = await db.query(
+    `
+      SELECT DISTINCT cg.teacher_id
+      FROM student_group_enrollments sge
+      JOIN class_groups cg ON cg.id = sge.group_id
+      WHERE sge.user_id = $1
+        AND sge.is_active = TRUE
+        AND cg.is_active = TRUE
+        AND cg.teacher_id IS NOT NULL
+    `,
+    [studentId]
+  );
+
+  return result.rows.map((row) => row.teacher_id);
+};
+
 module.exports = {
   findStudentContext,
   findGroupsByTeacher,
@@ -251,5 +268,6 @@ module.exports = {
   findAccessCode,
   findEnrollmentForYear,
   enrollStudent,
-  incrementCodeUses
+  incrementCodeUses,
+  findTeacherIdsByStudent
 };
