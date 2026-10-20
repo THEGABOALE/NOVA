@@ -9,6 +9,9 @@ const { settleAttempt } = require("../services/attempt-settlement.service");
 const { startFreshAttempt } = require("../services/attempt-start.service");
 const { normalizeTzOffset } = require("../services/streak.service");
 const { loadStreak } = require("../services/streak-query.service");
+const {
+  invalidateTeacherStudentsForStudent
+} = require("../services/teacher-cache.service");
 const { respondServerError } = require("../utils/server-error");
 
 // Devuelve el contenido jugable de una mision: preguntas con sus opciones
