@@ -6,6 +6,7 @@ import com.mindflow.nova.data.model.AnswerSubmission
 import com.mindflow.nova.data.model.AttemptResult
 import com.mindflow.nova.data.model.MissionContent
 import com.mindflow.nova.data.model.MissionOption
+import com.mindflow.nova.data.model.MissionPair
 import com.mindflow.nova.data.model.MissionQuestion
 import com.mindflow.nova.data.offline.AttemptRecorder
 import com.mindflow.nova.data.offline.FinishedAttempt
@@ -28,7 +29,7 @@ class LessonViewModelTest {
 
     private val question = MissionQuestion(
         id = 1, prompt = "¿Verdadero?", type = "true_false", feedback = null, orderIndex = 1, points = 10,
-        options = listOf(MissionOption(id = 1, text = "Verdadero", isCorrect = true, feedback = null, orderIndex = 1))
+        options = listOf(MissionOption(id = 1, text = "Verdadero", isCorrect = true, feedback = null, orderIndex = 1), MissionOption(id = 2, text = "Falso", isCorrect = false, feedback = null, orderIndex = 2))
     )
 
     private fun content(id: Int, questions: List<MissionQuestion> = listOf(question)) = MissionContent(
@@ -67,12 +68,13 @@ class LessonViewModelTest {
     private var clock = 1_000_000L
     private var nextId = 0
 
-    private fun viewModel() = LessonViewModel(
+    private fun viewModel(savedState: androidx.lifecycle.SavedStateHandle = androidx.lifecycle.SavedStateHandle(), snapshots: com.mindflow.nova.data.local.LocalStore? = null, userId: Int? = null) = LessonViewModel(
         repository = repo,
         recorder = recorder,
         now = { clock },
         newId = { "intento-${++nextId}" },
-        tzOffset = { -360 }
+        tzOffset = { -360 },
+        savedState = savedState, snapshotStore = snapshots, currentUserId = { userId }
     )
 
     @Before
@@ -291,5 +293,195 @@ class LessonViewModelTest {
 
         assertEquals(LessonOutcome.SaveFailed, viewModel.finishAttempt(emptyList(), timedOut = false))
         assertTrue(recorder.recorded.isEmpty())
+    }
+
+    @Test
+    fun `recrear conserva id contenido original reloj y potenciador`() = runTest {
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        val first = viewModel(handle, local, 7)
+        first.open(3)
+        val playing = first.state.value as LessonState.Playing
+        first.buyExtraTime()
+        clock += 10_000
+        first.pauseClock()
+        clock += 30_000
+        val restoredHandle = androidx.lifecycle.SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
+        repo.contentResult = { MissionContentResult.Failed("sin red") }
+        val restored = viewModel(restoredHandle, local, 7)
+        restored.open(3)
+        assertEquals(playing, restored.state.value)
+        assertEquals(1, repo.contentCalls)
+        restored.resumeClock()
+        restored.finishAttempt(emptyList(), false)
+        val finished = recorder.recorded.single()
+        assertEquals(playing.attemptId, finished.clientAttemptId)
+        assertEquals(1_000_000L, finished.startedAtMs)
+        assertEquals(30, finished.pausedSeconds)
+        assertTrue(finished.usedExtraTime)
+    }
+
+    /** Lo que Android guarda del ViewModel, como si el proceso muriera y se recreara. */
+    private fun afterProcessDeath(handle: androidx.lifecycle.SavedStateHandle, local: com.mindflow.nova.data.local.LocalStore): LessonViewModel {
+        val restoredHandle = androidx.lifecycle.SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
+        repo.contentResult = { MissionContentResult.Failed("sin red") }
+        return viewModel(restoredHandle, local, 7).also { it.open(3) }
+    }
+
+    @Test
+    fun `si el proceso muere con el reloj corriendo lo de afuera cuenta como pausa`() = runTest {
+        // Android 7 y 8: el estado se guarda antes de ON_STOP, sin la pausa anotada.
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        viewModel(handle, local, 7).apply {
+            open(3)
+            clock += 20_000
+            clockTick()
+        }
+        clock += 60_000
+
+        val restored = afterProcessDeath(handle, local)
+
+        assertEquals(0, restored.resumeClock())
+        restored.finishAttempt(emptyList(), false)
+        assertEquals(60, recorder.recorded.single().pausedSeconds)
+    }
+
+    private fun matchingContent(id: Int) = content(
+        id,
+        listOf(
+            MissionQuestion(
+                id = 9, prompt = "Relaciona", type = "matching", feedback = null, orderIndex = 1, points = 10,
+                pairs = listOf(MissionPair(id = 1, term = "Igualdad", match = "Mismos derechos", orderIndex = 1))
+            )
+        )
+    ).copy(mechanic = "matching", timeLimitSeconds = 45)
+
+    /** Lo que Android guardó en ese momento, para recuperarlo tras matar el proceso. */
+    private fun snapshot(handle: androidx.lifecycle.SavedStateHandle) =
+        androidx.lifecycle.SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
+
+    @Test
+    fun `matching guardado antes del primer segundo y de ON_STOP cuenta la pausa desde el inicio`() = runTest {
+        // Android 7 y 8: el estado se guarda antes de ON_STOP, y acá también antes del primer tick.
+        repo.contentResult = { MissionContentResult.Loaded(matchingContent(it)) }
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        val first = viewModel(handle, local, 7)
+        first.open(3)
+        val saved = snapshot(handle)
+        // ON_STOP llega después de guardar: esta pausa no está en lo guardado.
+        first.pauseClock()
+        clock += 60_000
+
+        val restored = viewModel(saved, local, 7)
+        restored.open(3)
+
+        assertEquals(0, restored.resumeClock())
+        restored.finishAttempt(emptyList(), false)
+        assertEquals(60, recorder.recorded.single().pausedSeconds)
+    }
+
+    @Test
+    fun `sin reloj no se inventa una pausa al recuperar el proceso`() = runTest {
+        // Verdadero o falso no tiene reloj: no hay ticks ni referencia que convertir en pausa.
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        viewModel(handle, local, 7).open(3)
+        clock += 60_000
+
+        val restored = afterProcessDeath(handle, local)
+
+        restored.finishAttempt(emptyList(), false)
+        assertEquals(0, recorder.recorded.single().pausedSeconds)
+    }
+
+    @Test
+    fun `una pausa ya anotada antes de morir el proceso no se cuenta dos veces`() = runTest {
+        // Android 9 en adelante: ON_STOP llega antes de guardar el estado.
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        viewModel(handle, local, 7).apply {
+            open(3)
+            clock += 20_000
+            clockTick()
+            clock += 500
+            pauseClock()
+        }
+        clock += 60_000
+
+        val restored = afterProcessDeath(handle, local)
+
+        restored.resumeClock()
+        restored.finishAttempt(emptyList(), false)
+        assertEquals(60, recorder.recorded.single().pausedSeconds)
+    }
+
+    @Test
+    fun `volver de una pausa no reusa el ultimo segundo de antes de pausar`() = runTest {
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        viewModel(handle, local, 7).apply {
+            open(3)
+            clockTick()
+            pauseClock()
+            clock += 40_000
+            resumeClock()
+        }
+        // Muere sin otro segundo jugado: solo cuenta lo que pasó desde que volvió.
+        clock += 10_000
+
+        val restored = afterProcessDeath(handle, local)
+
+        restored.resumeClock()
+        restored.finishAttempt(emptyList(), false)
+        assertEquals(50, recorder.recorded.single().pausedSeconds)
+    }
+
+    @Test
+    fun `el tope de pausa y el +30 s siguen al recrear el proceso`() = runTest {
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        viewModel(handle, local, 7).apply {
+            open(3)
+            buyExtraTime()
+            pauseClock()
+            clock += 200_000
+            resumeClock()
+            clockTick()
+            pauseClock()
+        }
+        clock += 150_000
+
+        val restored = afterProcessDeath(handle, local)
+
+        // 200 s + 150 s de pausa: los 300 s gratis se agotaron y 50 s corren como jugados.
+        assertEquals(50, restored.resumeClock())
+        restored.finishAttempt(emptyList(), false)
+        val finished = recorder.recorded.single()
+        assertEquals(350, finished.pausedSeconds)
+        assertTrue(finished.usedExtraTime)
+    }
+
+    @Test
+    fun `reanudar sin pausa no descuenta nada`() = runTest {
+        val viewModel = viewModel()
+        viewModel.open(3)
+
+        assertEquals(0, viewModel.resumeClock())
+        viewModel.finishAttempt(emptyList(), false)
+        assertEquals(0, recorder.recorded.single().pausedSeconds)
+    }
+
+    @Test
+    fun `otra cuenta no restaura un intento ajeno`() = runTest {
+        val handle = androidx.lifecycle.SavedStateHandle()
+        val local = com.mindflow.nova.data.local.FakeLocalStore()
+        val first = viewModel(handle, local, 7)
+        first.open(3)
+        val second = viewModel(handle, local, 8)
+        second.open(3)
+        assertEquals(2, nextId)
+        assertFalse((first.state.value as LessonState.Playing).attemptId == (second.state.value as LessonState.Playing).attemptId)
     }
 }

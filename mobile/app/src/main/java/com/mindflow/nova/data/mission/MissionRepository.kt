@@ -34,22 +34,27 @@ interface MissionRepository {
 class RemoteMissionRepository(
     private val api: () -> NovaApiService = { RetrofitClient.api },
     private val local: LocalStore = AppServices.localStore,
-    private val now: () -> Long = System::currentTimeMillis
+    private val now: () -> Long = System::currentTimeMillis,
+    private val currentUserId: () -> Int? = { AppServices.session.currentUserId() },
+    private val tokenFor: (Int) -> String? = { AppServices.session.tokenFor(it) }
 ) : MissionRepository {
 
     override suspend fun loadContent(missionId: Int): MissionContentResult {
+        val userId = currentUserId() ?: return MissionContentResult.Failed(SESSION_CHANGED_MESSAGE)
+        val token = tokenFor(userId) ?: return MissionContentResult.Failed(SESSION_CHANGED_MESSAGE)
         val failure = try {
-            val response = api().getMissionContent(missionId)
+            val response = api().getMissionContent(missionId, "Bearer $token")
+            if (currentUserId() != userId || tokenFor(userId) != token) return MissionContentResult.Failed(SESSION_CHANGED_MESSAGE)
             val body = response.body()
 
             if (response.isSuccessful && body != null) {
-                localOrNull { local.saveMission(body.mission) }
+                localOrNull { local.saveMission(userId, body.mission) }
                 return MissionContentResult.Loaded(body.mission)
             }
 
             val message = httpErrorMessage(response.code(), response.errorBody()?.string(), "No se pudo cargar la misión")
             // La misión ya no existe o no está publicada: la copia guardada no sirve.
-            if (response.code() == 404) return MissionContentResult.Failed(message)
+            if (response.code() in listOf(401, 403, 404)) return MissionContentResult.Failed(message)
             message
         } catch (e: CancellationException) {
             throw e
@@ -57,21 +62,27 @@ class RemoteMissionRepository(
             NOT_DOWNLOADED_MESSAGE
         }
 
-        val cached = localOrNull { local.mission(missionId) }
+        if (currentUserId() != userId || tokenFor(userId) != token) return MissionContentResult.Failed(SESSION_CHANGED_MESSAGE)
+        val cached = localOrNull { local.mission(userId, missionId) }
 
         return if (cached != null) MissionContentResult.Loaded(cached) else MissionContentResult.Failed(failure)
     }
 
     override suspend fun prefetch(missionIds: List<Int>) {
+        val userId = currentUserId() ?: return
+        val token = tokenFor(userId) ?: return
         for (missionId in missionIds.distinct()) {
-            val savedAt = localOrNull { local.missionSavedAt(missionId) }
+            if (currentUserId() != userId || tokenFor(userId) != token) return
+            val savedAt = localOrNull { local.missionSavedAt(userId, missionId) }
             if (savedAt != null && now() - savedAt < MAX_AGE_MS) continue
 
             // Una que falle no corta las demás; se vuelve a intentar en la próxima carga.
             try {
-                val response = api().getMissionContent(missionId)
+                val response = api().getMissionContent(missionId, "Bearer $token")
                 val body = response.body()
-                if (response.isSuccessful && body != null) localOrNull { local.saveMission(body.mission) }
+                if (currentUserId() != userId || tokenFor(userId) != token) return
+                if (response.code() == 401 || response.code() == 403) return
+                if (response.isSuccessful && body != null) localOrNull { local.saveMission(userId, body.mission) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -83,5 +94,6 @@ class RemoteMissionRepository(
     private companion object {
         const val MAX_AGE_MS = 24L * 60 * 60 * 1000
         const val NOT_DOWNLOADED_MESSAGE = "Esta misión todavía no está descargada. Conéctate a internet para bajarla."
+        const val SESSION_CHANGED_MESSAGE = "Tu sesión cambió. Vuelve a abrir la misión."
     }
 }

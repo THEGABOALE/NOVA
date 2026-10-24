@@ -101,4 +101,11 @@ class MissionInfoTest {
         val m = mission(1).copy(questionCount = 1, maxPlumas = null, timeLimitSeconds = null, pointsReward = 100)
         assertEquals(listOf("1 pregunta", "3 plumas", "Repaso: suma menos semillas"), missionFacts(m, isReplay = true))
     }
+
+    @Test fun `mecanicas desconocidas no son jugables ni saltan requisitos`() {
+        val path = listOf(mission(1).copy(mechanic = "word_search"), mission(2))
+        assertEquals(listOf(false, false), computeMissionStates(path, emptySet()).map { it.isUnlocked })
+        assertEquals(listOf(false, true), computeMissionStates(path, setOf(1)).map { it.isUnlocked })
+        assertEquals(false, computeMissionStates(listOf(mission(1).copy(isPublished = false)), emptySet()).single().isUnlocked)
+    }
 }

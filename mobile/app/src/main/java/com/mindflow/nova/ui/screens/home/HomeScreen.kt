@@ -33,6 +33,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.mindflow.nova.ui.components.jsonStateSaver
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,10 +77,10 @@ fun HomeScreen(
     // es no se elige ninguno.
     val level = user?.let { levelForStudent(state.levels, it) }
 
-    var selectedTab by remember { mutableStateOf(NovaTab.Home) }
-    var activeMission by remember { mutableStateOf<MissionResponse?>(null) }
+    var selectedTab by rememberSaveable { mutableStateOf(NovaTab.Home) }
+    var activeMission by rememberSaveable(stateSaver = jsonStateSaver<MissionResponse?>()) { mutableStateOf<MissionResponse?>(null) }
     // Misión elegida que todavía espera la confirmación "¿Quieres comenzar?".
-    var pendingMission by remember { mutableStateOf<MissionResponse?>(null) }
+    var pendingMission by rememberSaveable(stateSaver = jsonStateSaver<MissionResponse?>()) { mutableStateOf<MissionResponse?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.start()
@@ -170,7 +172,7 @@ fun HomeScreen(
                         level = level,
                         user = state.user,
                         progress = progress,
-                        onMissionSelected = { mission -> pendingMission = mission },
+                        onMissionSelected = { mission -> if (com.mindflow.nova.data.model.supportsMechanic(mission.mechanic)) pendingMission = mission },
                         onOpenLessons = { selectedTab = NovaTab.Lessons },
                         themeMode = themeMode,
                         onThemeModeChange = onThemeModeChange,

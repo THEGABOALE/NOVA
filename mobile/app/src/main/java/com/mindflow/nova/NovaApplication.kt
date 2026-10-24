@@ -20,6 +20,7 @@ class NovaApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        com.mindflow.nova.data.diagnostics.NovaTelemetry.init(this)
         AppServices.init(this)
         session = AppServices.session
         themePreferences = ThemePreferences(this)
