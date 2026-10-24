@@ -15,6 +15,8 @@ El producto es **NOVA** y lo desarrolla el equipo **MindFlow** para el reto de p
 | **Backend** (`backend/`) | API REST completa para autenticación, salas, niveles, misiones, intentos, progreso, rachas y vistas por rol | Railway, con PostgreSQL |
 | **App móvil** (`mobile/`) | Flujo completo del estudiante y pantalla del docente con datos de ejemplo | Android |
 | **Landing** (`landing/`) | Página de presentación del producto | Cloudflare Workers |
+| **CI** (`.github/workflows/`) | Pipeline para backend, móvil y landing | GitHub Actions |
+
 
 En la app el estudiante puede:
 
@@ -29,28 +31,81 @@ En la app el estudiante puede:
 
 ```txt
 NOVA/
-├─ backend/              API REST en Node.js + Express
+├─ .github/               GitHub Actions y configuración del repositorio
+│  └─ workflows/
+│     └─ ci.yml           CI para backend, móvil y landing
+├─ backend/               API REST en Node.js + Express
+│  ├─ .env.example        Variables de entorno base
+│  ├─ nixpacks.toml       Configuración de despliegue en Railway
+│  ├─ package.json        Dependencias y scripts del backend
+│  ├─ pnpm-workspace.yaml Workspace del proyecto backend
+│  ├─ pnpm-lock.yaml      Lockfile de dependencias
+│  ├─ railway.json        Configuración de Railway
 │  ├─ src/
-│  │  ├─ routes/         Rutas HTTP y qué rol puede usarlas
-│  │  ├─ middleware/     Validación del token y del rol
-│  │  ├─ controllers/    Un caso de uso por función: valida, orquesta y responde
-│  │  ├─ services/       Reglas de negocio puras (calificar, racha, quién ve a quién)
-│  │  ├─ repositories/   Todo el SQL, agrupado por tabla o agregado
-│  │  ├─ database/       Conexión, transacciones, schema.sql y data.sql
-│  │  ├─ utils/          JWT, contraseñas y verificación del token de Google
-│  │  ├─ config/         Variables de entorno
 │  │  ├─ app.js
-│  │  └─ server.js
-│  ├─ tests/             Tests con Jest
-│  └─ railway.json       Configuración del despliegue
-├─ mobile/               App Android en Kotlin + Jetpack Compose
-│  └─ app/src/
-│     ├─ main/java/com/mindflow/nova/
-│     │  ├─ ui/          Pantallas, componentes, ViewModels y tema
-│     │  └─ data/        Repositorios, cliente de la API, sesión y modelos
-│     └─ test/           Tests unitarios
-├─ landing/              Landing en React + Vite + Tailwind (ver landing/README.md)
-└─ .github/workflows/    CI
+│  │  ├─ server.js
+│  │  ├─ routes/          Rutas HTTP y qué rol puede usarlas
+│  │  ├─ middleware/      Validación del token y del rol
+│  │  ├─ controllers/     Casos de uso por función
+│  │  ├─ services/        Reglas de negocio puras
+│  │  ├─ repositories/    Consultas SQL por entidad o agregado
+│  │  ├─ database/        Conexión, transacciones, schema.sql, data.sql y migraciones
+│  │  │  ├─ connection.js
+│  │  │  ├─ transaction.js
+│  │  │  ├─ redis.js
+│  │  │  ├─ schema.sql
+│  │  │  ├─ data.sql
+│  │  │  └─ migrations/
+│  │  ├─ utils/           JWT, contraseñas y validación de Google
+│  │  ├─ config/
+│  │  │  └─ env.js
+│  │  └─ tests/
+│  └─ tests/              Tests con Jest
+├─ mobile/                App Android en Kotlin + Jetpack Compose
+│  ├─ .gitignore
+│  ├─ build.gradle.kts
+│  ├─ gradle.properties
+│  ├─ gradlew
+│  ├─ gradlew.bat
+│  ├─ settings.gradle.kts
+│  ├─ gradle/
+│  │  ├─ libs.versions.toml
+│  │  └─ wrapper/
+│  └─ app/
+│     ├─ build.gradle.kts
+│     └─ src/
+│        ├─ main/
+│        │  ├─ AndroidManifest.xml
+│        │  ├─ java/com/mindflow/nova/
+│        │  │  ├─ data/       Repositorios, cliente de la API, sesión y modelos
+│        │  │  ├─ ui/         Pantallas, componentes, ViewModels y tema
+│        │  │  ├─ AppServices.kt
+│        │  │  ├─ MainActivity.kt
+│        │  │  └─ NovaApplication.kt
+│        │  └─ res/          Íconos, recursos, temas y configuración de red
+│        └─ test/            Tests unitarios de lógica y UI
+├─ landing/               Landing en React + Vite + Tailwind
+│  ├─ README.md
+│  ├─ package.json
+│  ├─ package-lock.json
+│  ├─ vite.config.js
+│  ├─ vitest.config.js
+│  ├─ wrangler.jsonc
+│  ├─ design/             Assets de marca e identidad visual
+│  ├─ public/             Favicons, OG image, sitemap y headers
+│  ├─ scripts/            Preparación de assets y prerender
+│  └─ src/
+│     ├─ App.jsx
+│     ├─ main.jsx
+│     ├─ entry-server.jsx
+│     ├─ index.css
+│     ├─ assets/
+│     ├─ components/
+│     ├─ config/
+│     ├─ sections/
+│     └─ test/
+├─ .gitignore
+└─ README.md
 ```
 
 ---
@@ -78,7 +133,7 @@ En la app, las pantallas leen el estado de su ViewModel con `StateFlow`, y el Vi
 | --- | --- |
 | Backend | Node.js 18+, Express 5, PostgreSQL (`pg`), JWT (`jsonwebtoken`), `bcryptjs`, `google-auth-library`, Jest |
 | App móvil | Kotlin, Jetpack Compose, Material 3, ViewModel + StateFlow, Retrofit, JUnit, `kotlinx-coroutines-test` |
-| Landing | React 19, Vite, Tailwind CSS 4, oxlint, Cloudflare Workers |
+| Landing | React 19, Vite, Tailwind CSS 4, Vitest, Cloudflare Workers |
 | Infraestructura | Railway (backend), PostgreSQL gestionado, GitHub Actions |
 
 ---
@@ -236,6 +291,16 @@ La URL de la API depende del tipo de build:
 
 Para probar contra el backend local basta con levantarlo con `pnpm run dev` y correr la app en el emulador. Para una demo en un teléfono se instala el build release, que se firma con la clave de debug y no sirve para publicar en Play Store.
 
+
+```md
+La app incluye además estructura de persistencia y sincronización offline con:
+- `data/local/`: base de datos local, DAO y almacenamiento de sesión.
+- `data/offline/`: grabación de intentos pendientes y sincronización con el backend.
+- `data/remote/`: cliente Retrofit, interceptores y manejo de errores.
+- `data/session/`: token, tema y persistencia de sesión.
+
+```
+
 Tests unitarios, desde `mobile/`:
 
 ```bash
@@ -247,6 +312,14 @@ Tests unitarios, desde `mobile/`:
 ## Landing
 
 Está en `landing/`. Cómo correrla, publicarla y los detalles de marca están en [landing/README.md](landing/README.md).
+
+La landing incluye además:
+
+- `design/`: activos de marca, logotipos e identidad visual.
+- `public/`: SEO, `robots.txt`, `sitemap.xml`, `og-image.png` y headers para Cloudflare.
+- `scripts/`: preparación de assets y prerender.
+- `src/test/`: pruebas de componentes y navegación.
+- `wrangler.jsonc`: configuración de despliegue para Cloudflare Workers.
 
 ---
 
