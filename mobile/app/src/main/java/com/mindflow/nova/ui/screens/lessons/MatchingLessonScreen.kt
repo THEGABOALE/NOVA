@@ -31,10 +31,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.mindflow.nova.ui.components.jsonStateSaver
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,7 +70,6 @@ import com.mindflow.nova.ui.theme.NovaSuccessBackground
 import com.mindflow.nova.ui.theme.NovaText
 import com.mindflow.nova.ui.theme.NovaTextSecondary
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 private const val MATCHING_TIME_SECONDS = 45
 
@@ -96,41 +95,53 @@ fun MatchingLessonScreen(
     // constantes solo son respaldo por si la API todavía no manda los campos.
     val maxPlumas = mission.maxPlumas ?: LESSON_MAX_PLUMAS
     val timeLimitSeconds = mission.timeLimitSeconds ?: MATCHING_TIME_SECONDS
-    val scope = rememberCoroutineScope()
 
-    var matchedIds by remember { mutableStateOf(setOf<Int>()) }
-    var selectedTermId by remember { mutableStateOf<Int?>(null) }
-    var wrongPair by remember { mutableStateOf<Pair<Int, Int>?>(null) }
-    var correctCount by remember { mutableStateOf(0) }
-    var wrongCount by remember { mutableStateOf(0) }
-    var plumas by remember { mutableStateOf(maxPlumas) }
-    var stage by remember { mutableStateOf(MatchingStage.IN_PROGRESS) }
-    var showExitConfirmation by remember { mutableStateOf(false) }
-    var secondsLeft by remember { mutableStateOf(timeLimitSeconds) }
-    var feedback by remember { mutableStateOf(ZafiroLines.MATCHING_PLAYING) }
-    var justLostPluma by remember { mutableStateOf(false) }
-    var attemptResult by remember { mutableStateOf<AttemptResult?>(null) }
-    var pendingNotice by remember { mutableStateOf(false) }
+    var matchedIds by rememberSaveable(stateSaver = jsonStateSaver<Set<Int>>()) { mutableStateOf(setOf<Int>()) }
+    var selectedTermId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var wrongPair by rememberSaveable(stateSaver = jsonStateSaver<Pair<Int, Int>?>()) { mutableStateOf<Pair<Int, Int>?>(null) }
+    var correctCount by rememberSaveable { mutableStateOf(0) }
+    var wrongCount by rememberSaveable { mutableStateOf(0) }
+    var plumas by rememberSaveable { mutableStateOf(maxPlumas) }
+    var stage by rememberSaveable { mutableStateOf(MatchingStage.IN_PROGRESS) }
+    var showExitConfirmation by rememberSaveable { mutableStateOf(false) }
+    var secondsLeft by rememberSaveable { mutableStateOf(timeLimitSeconds) }
+    var feedback by rememberSaveable { mutableStateOf(ZafiroLines.MATCHING_PLAYING) }
+    var justLostPluma by rememberSaveable { mutableStateOf(false) }
+    var attemptResult by rememberSaveable(stateSaver = jsonStateSaver<AttemptResult?>()) { mutableStateOf<AttemptResult?>(null) }
+    var pendingNotice by rememberSaveable { mutableStateOf(false) }
     // El reloj se detiene mientras la app está en segundo plano; y el "+30 s"
     // se puede comprar una sola vez por intento.
-    var clockPaused by remember { mutableStateOf(false) }
-    var extraTimeUsed by remember { mutableStateOf(false) }
-    var rejectedMessage by remember { mutableStateOf("") }
-    val answers = remember { mutableStateListOf<AnswerSubmission>() }
+    var clockPaused by rememberSaveable { mutableStateOf(false) }
+    var extraTimeUsed by rememberSaveable { mutableStateOf(false) }
+    var rejectedMessage by rememberSaveable { mutableStateOf("") }
+    var answers by rememberSaveable(stateSaver = jsonStateSaver<List<AnswerSubmission>>()) { mutableStateOf(emptyList()) }
 
-    val shuffledTerms = remember { pairs.shuffled() }
-    val shuffledMatches = remember { pairs.shuffled() }
+    val shuffleSeed = rememberSaveable { kotlin.random.Random.nextLong() }
+    val shuffledTerms = remember(pairs, shuffleSeed) { pairs.shuffled(kotlin.random.Random(shuffleSeed)) }
+    val shuffledMatches = remember(pairs, shuffleSeed) { pairs.shuffled(kotlin.random.Random(shuffleSeed xor 12345L)) }
+
+    var finishingTimedOut by rememberSaveable { mutableStateOf(false) }
+    var finishingStage by rememberSaveable { mutableStateOf(MatchingStage.COMPLETED) }
 
     fun finish(timedOut: Boolean, targetStage: MatchingStage) {
+        finishingTimedOut = timedOut
+        finishingStage = targetStage
         stage = MatchingStage.SUBMITTING
-        scope.launch {
-            val outcome = attempt.submit(answers.toList(), timedOut)
+    }
+
+    LaunchedEffect(stage) {
+        if (stage == MatchingStage.SUBMITTING) {
+            val outcome = attempt.submit(answers.toList(), finishingTimedOut)
             val result = outcome.savedResult
             when {
                 result != null -> {
                     attemptResult = result
                     pendingNotice = outcome is LessonOutcome.Pending
-                    stage = targetStage
+                    stage = when (result.status) {
+                        "completed" -> MatchingStage.COMPLETED
+                        "timed_out" -> MatchingStage.TIME_UP
+                        else -> finishingStage.takeIf { it != MatchingStage.COMPLETED } ?: MatchingStage.OUT_OF_PLUMAS
+                    }
                 }
                 outcome is LessonOutcome.Rejected -> {
                     rejectedMessage = outcome.message
@@ -141,6 +152,11 @@ fun MatchingLessonScreen(
         }
     }
 
+    // El reloj se pausa cuando la misión deja de verse (ON_STOP: otra app
+    // encima, pantalla apagada, Inicio) y sigue al volver (ON_START). No se usa
+    // ON_PAUSE: también llega con la misión todavía visible (otra ventana con
+    // el foco en multiventana, un diálogo del sistema encima), y ahí el
+    // estudiante podría seguir mirando el tablero con el reloj parado.
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -149,7 +165,11 @@ fun MatchingLessonScreen(
                     clockPaused = true
                     attempt.onPauseClock()
                 }
-                Lifecycle.Event.ON_START -> if (clockPaused) {
+                // Siempre se le pregunta al ViewModel, aunque esta pantalla no
+                // haya visto la pausa: en Android 7 y 8 el estado se guarda antes
+                // de ON_STOP, y tras recrearse la pantalla cree que el reloj corría
+                // mientras el ViewModel lo tiene en pausa.
+                Lifecycle.Event.ON_START -> if (stage == MatchingStage.IN_PROGRESS) {
                     clockPaused = false
                     // Lo que pasó del tope de pausa gratis corre como jugado.
                     secondsLeft = (secondsLeft - attempt.onResumeClock()).coerceAtLeast(0)
@@ -164,7 +184,10 @@ fun MatchingLessonScreen(
     LaunchedEffect(Unit) {
         while (secondsLeft > 0 && stage == MatchingStage.IN_PROGRESS) {
             delay(1000)
-            if (!clockPaused) secondsLeft -= 1
+            if (!clockPaused) {
+                secondsLeft -= 1
+                attempt.onClockTick()
+            }
         }
         if (secondsLeft <= 0 && stage == MatchingStage.IN_PROGRESS) {
             finish(timedOut = true, targetStage = MatchingStage.TIME_UP)
@@ -181,7 +204,7 @@ fun MatchingLessonScreen(
 
     fun onMatchTap(matchPairId: Int) {
         val termId = selectedTermId ?: return
-        answers.add(AnswerSubmission(questionId = questionId, pairId = termId, selectedPairId = matchPairId))
+        answers = answers + AnswerSubmission(questionId = questionId, pairId = termId, selectedPairId = matchPairId)
 
         if (termId == matchPairId) {
             matchedIds = matchedIds + termId
@@ -229,7 +252,7 @@ fun MatchingLessonScreen(
         when (stage) {
             MatchingStage.SUBMITTING -> LessonSubmitting()
 
-            MatchingStage.SUBMIT_ERROR -> LessonSubmitError(onRetry = attempt.onRetry, onExit = onExit)
+            MatchingStage.SUBMIT_ERROR -> LessonSubmitError(onRetry = { finish(finishingTimedOut, finishingStage) }, onExit = onExit)
 
             MatchingStage.REJECTED -> LessonRejected(message = rejectedMessage, onRetry = attempt.onRetry, onExit = onExit)
 

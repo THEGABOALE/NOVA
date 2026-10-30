@@ -16,7 +16,8 @@ class FakeLocalStore(private val now: () -> Long = { 0L }) : LocalStore {
 
     private val users = MutableStateFlow<Map<Int, SessionUser>>(emptyMap())
     private val levels = MutableStateFlow<Map<Int, List<LevelResponse>>>(emptyMap())
-    private val missions = MutableStateFlow<Map<Int, Pair<MissionContent, Long>>>(emptyMap())
+    private val missions = MutableStateFlow<Map<Pair<Int, Int>, Pair<MissionContent, Long>>>(emptyMap())
+    private val active = mutableMapOf<Pair<Int, String>, MissionContent>()
     private val progress = MutableStateFlow<Map<Int, StudentProgress>>(emptyMap())
     private val pending = MutableStateFlow<Map<String, PendingAttempt>>(emptyMap())
     /** Avisos por clientAttemptId, con el userId de su dueño. */
@@ -34,10 +35,14 @@ class FakeLocalStore(private val now: () -> Long = { 0L }) : LocalStore {
         this.levels.update { it + (userId to levels) }
     override suspend fun levels(userId: Int): List<LevelResponse>? = levels.value[userId]
 
-    override suspend fun saveMission(content: MissionContent) =
-        missions.update { it + (content.id to (content to now())) }
-    override suspend fun mission(missionId: Int): MissionContent? = missions.value[missionId]?.first
-    override suspend fun missionSavedAt(missionId: Int): Long? = missions.value[missionId]?.second
+    override suspend fun saveMission(userId: Int, content: MissionContent) =
+        missions.update { it + ((userId to content.id) to (content to now())) }
+    override suspend fun mission(userId: Int, missionId: Int): MissionContent? = missions.value[userId to missionId]?.first
+    override suspend fun missionSavedAt(userId: Int, missionId: Int): Long? = missions.value[userId to missionId]?.second
+
+    override suspend fun saveActiveLesson(userId: Int, attemptId: String, content: MissionContent) { active[userId to attemptId] = content }
+    override suspend fun activeLesson(userId: Int, attemptId: String) = active[userId to attemptId]
+    override suspend fun clearActiveLessons(userId: Int) { active.keys.removeAll { it.first == userId } }
 
     override suspend fun saveProgress(userId: Int, progress: StudentProgress) =
         this.progress.update { it + (userId to progress) }
@@ -63,5 +68,7 @@ class FakeLocalStore(private val now: () -> Long = { 0L }) : LocalStore {
         users.update { it - userId }
         levels.update { it - userId }
         progress.update { it - userId }
+        missions.update { all -> all.filterKeys { it.first != userId } }
+        clearActiveLessons(userId)
     }
 }

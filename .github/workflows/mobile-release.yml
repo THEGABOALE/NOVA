@@ -1,0 +1,48 @@
+name: Mobile signed release
+on:
+  workflow_dispatch:
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    environment: mobile-production
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      NOVA_KEYSTORE_PATH: ${{ github.workspace }}/mobile/release-signing.jks
+      NOVA_KEYSTORE_PASSWORD: ${{ secrets.NOVA_KEYSTORE_PASSWORD }}
+      NOVA_KEY_ALIAS: ${{ secrets.NOVA_KEY_ALIAS }}
+      NOVA_KEY_PASSWORD: ${{ secrets.NOVA_KEY_PASSWORD }}
+      NOVA_API_BASE_URL: ${{ vars.NOVA_API_BASE_URL }}
+      NOVA_SENTRY_DSN: ${{ vars.NOVA_SENTRY_DSN }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Solo se permiten releases desde main
+        run: test "$GITHUB_REF" = "refs/heads/main"
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools
+      - name: Cargar keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.NOVA_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$KEYSTORE_BASE64"
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$NOVA_KEYSTORE_PATH"
+      - run: chmod +x gradlew
+      - run: ./gradlew lintRelease testReleaseUnitTest bundleRelease --no-configuration-cache --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nova-signed-release
+          path: |
+            mobile/app/build/outputs/bundle/release/*.aab
+            mobile/app/build/outputs/mapping/release/mapping.txt
+      - name: Eliminar keystore temporal
+        if: always()
+        run: rm -f "$NOVA_KEYSTORE_PATH"

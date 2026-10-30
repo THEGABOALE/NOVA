@@ -189,7 +189,7 @@ class StudentHomeViewModel(
 
         prefetchDone = true
         viewModelScope.launch {
-            missions.prefetch(level.missions.filter { it.isPublished }.map { it.id })
+            missions.prefetch(level.missions.filter { it.isPublished && com.mindflow.nova.data.model.supportsMechanic(it.mechanic) }.map { it.id })
         }
     }
 
