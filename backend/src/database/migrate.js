@@ -4,11 +4,30 @@ const pool = require("./connection");
 
 const migrationsDir = path.join(__dirname, "migrations");
 
-async function runMigrations() {
-    const client = await pool.connect();
+const MIGRATION_LOCK_NAMESPACE = 4242;
+const MIGRATION_LOCK_ID = 1;
 
-    try {
-        await client.query(`
+async function runMigrations() {
+  const client = await pool.connect();
+  let lockAcquired = false;
+
+  try {
+    const lockResult = await client.query(
+      `
+        SELECT pg_try_advisory_lock($1, $2) AS acquired;
+      `,
+      [MIGRATION_LOCK_NAMESPACE, MIGRATION_LOCK_ID]
+    );
+
+    if (!lockResult.rows[0].acquired) {
+      throw new Error(
+        "Ya existe otro proceso ejecutando migraciones en esta base de datos"
+      );
+    }
+
+    lockAcquired = true;
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
         id SERIAL PRIMARY KEY,
         filename VARCHAR(255) UNIQUE NOT NULL,
@@ -16,61 +35,77 @@ async function runMigrations() {
       );
     `);
 
-        const files = (await fs.readdir(migrationsDir))
-            .filter((file) => file.endsWith(".sql"))
-            .sort();
+    const files = (await fs.readdir(migrationsDir))
+      .filter((file) => file.endsWith(".sql"))
+      .sort();
 
-        for (const filename of files) {
-            const alreadyApplied = await client.query(
-                `
+    for (const filename of files) {
+      const alreadyApplied = await client.query(
+        `
           SELECT 1
           FROM schema_migrations
           WHERE filename = $1
-          LIMIT 1
+          LIMIT 1;
         `,
-                [filename]
-            );
+        [filename]
+      );
 
-            if (alreadyApplied.rowCount > 0) {
-                console.log(`[migrate] Ya aplicada: ${filename}`);
-                continue;
-            }
+      if (alreadyApplied.rowCount > 0) {
+        console.log(`[migrate] Ya aplicada: ${filename}`);
+        continue;
+      }
 
-            const filePath = path.join(migrationsDir, filename);
-            const sql = await fs.readFile(filePath, "utf8");
+      const filePath = path.join(migrationsDir, filename);
+      const sql = await fs.readFile(filePath, "utf8");
 
-            console.log(`[migrate] Aplicando: ${filename}`);
+      console.log(`[migrate] Aplicando: ${filename}`);
 
-            await client.query("BEGIN");
+      await client.query("BEGIN");
 
-            try {
-                await client.query(sql);
+      try {
+        await client.query(sql);
 
-                await client.query(
-                    `
+        await client.query(
+          `
             INSERT INTO schema_migrations (filename)
-            VALUES ($1)
+            VALUES ($1);
           `,
-                    [filename]
-                );
+          [filename]
+        );
 
-                await client.query("COMMIT");
+        await client.query("COMMIT");
 
-                console.log(`[migrate] OK: ${filename}`);
-            } catch (error) {
-                await client.query("ROLLBACK");
-                throw error;
-            }
-        }
-
-        console.log("[migrate] Todas las migraciones están aplicadas");
-    } finally {
-        client.release();
-        await pool.end();
+        console.log(`[migrate] OK: ${filename}`);
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      }
     }
+
+    console.log("[migrate] Todas las migraciones están aplicadas");
+  } finally {
+    if (lockAcquired) {
+      try {
+        await client.query(
+          `
+            SELECT pg_advisory_unlock($1, $2);
+          `,
+          [MIGRATION_LOCK_NAMESPACE, MIGRATION_LOCK_ID]
+        );
+      } catch (error) {
+        console.error(
+          "[migrate] No se pudo liberar el bloqueo de migraciones:",
+          error
+        );
+      }
+    }
+
+    client.release();
+    await pool.end();
+  }
 }
 
 runMigrations().catch((error) => {
-    console.error("[migrate] Error ejecutando migraciones:", error);
-    process.exit(1);
+  console.error("[migrate] Error ejecutando migraciones:", error);
+  process.exit(1);
 });
