@@ -15,6 +15,10 @@ const rejected = (clientAttemptId, message) => ({ clientAttemptId, status: "reje
 
 const accepted = (clientAttemptId, attempt) => ({ clientAttemptId, status: "accepted", attempt });
 
+const {
+  invalidateTeacherStudentsForStudent
+} = require("../services/teacher-cache.service");
+
 // Un intento del lote, en su propia transacción. Devuelve accepted o
 // rejected; un error inesperado sube y corta el lote (500).
 const syncOne = (userId, item) =>
@@ -117,6 +121,11 @@ const syncAttempts = async (req, res) => {
     const totals = await attemptRepository.findStudentTotals(pool, userId);
     const completedMissionIds = await attemptRepository.findCompletedMissionIds(pool, userId);
 
+    // La sincronización offline puede modificar puntos, misiones completadas
+    // y progreso del estudiante. Invalidamos una sola vez al terminar el lote
+    // para que el profesor no reciba datos antiguos desde Redis.
+    await invalidateTeacherStudentsForStudent(pool, userId);
+    
     return res.status(200).json({
       message: "Intentos sincronizados",
       status: "OK",
