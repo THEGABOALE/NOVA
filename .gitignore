@@ -10,8 +10,13 @@ backend/.env
 # Android
 **/build/
 **/.gradle/
+**/.kotlin/
 **/local.properties
 *.iml
+*.jks
+*.keystore
+keystore.properties
+signing.properties
 
 # Configuración local del IDE (Android Studio la regenera sola)
 .idea/

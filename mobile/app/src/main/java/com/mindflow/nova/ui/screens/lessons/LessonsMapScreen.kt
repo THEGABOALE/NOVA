@@ -333,7 +333,7 @@ private fun LessonPathInfoCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = mission.title,
+                text = if (com.mindflow.nova.data.model.supportsMechanic(mission.mechanic)) mission.title else "${mission.title} · No disponible en esta versión",
                 color = if (isLocked) NovaTextSecondary else NovaText,
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp

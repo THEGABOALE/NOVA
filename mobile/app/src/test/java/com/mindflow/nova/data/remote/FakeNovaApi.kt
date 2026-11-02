@@ -23,6 +23,9 @@ import retrofit2.Response
  * guarda lo que recibió. Lo que un test no configura lanza NotImplementedError.
  */
 class FakeNovaApi : NovaApiService {
+    var onTeacherRooms: suspend () -> Response<com.mindflow.nova.data.model.TeacherRoomsResponse> = { TODO() }
+    override suspend fun getTeacherRooms(authorization: String) = onTeacherRooms()
+
 
     val syncRequests = mutableListOf<SyncAttemptsRequest>()
     /** El Authorization con que llegó cada subida, en el mismo orden que [syncRequests]. */
@@ -62,7 +65,7 @@ class FakeNovaApi : NovaApiService {
     override suspend fun getLevels(): Response<List<LevelResponse>> = onLevels()
     override suspend fun getStudentProgress(studentId: Int, tzOffsetMinutes: Int): Response<StudentProgressResponse> =
         onProgress(studentId)
-    override suspend fun getMissionContent(missionId: Int): Response<MissionContentResponse> {
+    override suspend fun getMissionContent(missionId: Int, authorization: String?): Response<MissionContentResponse> {
         missionRequests += missionId
         return onMissionContent(missionId)
     }

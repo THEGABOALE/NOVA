@@ -1,6 +1,7 @@
 package com.mindflow.nova.ui.screens.lessons
 
 import com.mindflow.nova.data.model.MissionResponse
+import com.mindflow.nova.data.model.supportsMechanic
 import com.mindflow.nova.ui.screens.lessons.common.LESSON_MAX_PLUMAS
 
 data class MissionState(val isCompleted: Boolean, val isUnlocked: Boolean)
@@ -17,7 +18,7 @@ fun computeMissionStates(
 
     return missions.map { mission ->
         val isCompleted = mission.id in completedMissionIds
-        val isUnlocked = isCompleted || previousCompleted
+        val isUnlocked = (isCompleted || previousCompleted) && mission.isPublished && supportsMechanic(mission.mechanic)
         previousCompleted = isCompleted
 
         MissionState(isCompleted = isCompleted, isUnlocked = isUnlocked)

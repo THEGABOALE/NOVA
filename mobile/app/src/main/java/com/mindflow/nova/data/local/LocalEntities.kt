@@ -14,8 +14,12 @@ data class CachedUserEntity(@PrimaryKey val userId: Int, val json: String, val u
 @Entity(tableName = "cached_levels")
 data class CachedLevelsEntity(@PrimaryKey val userId: Int, val json: String, val updatedAt: Long)
 
-@Entity(tableName = "cached_mission")
-data class CachedMissionEntity(@PrimaryKey val missionId: Int, val json: String, val updatedAt: Long)
+@Entity(tableName = "cached_mission", primaryKeys = ["userId", "missionId"])
+data class CachedMissionEntity(val userId: Int, val missionId: Int, val json: String, val updatedAt: Long)
+
+/** Contenido inmutable del intento activo; no se mete en el Bundle de Android. */
+@Entity(tableName = "active_lesson", primaryKeys = ["userId", "attemptId"])
+data class ActiveLessonEntity(val userId: Int, val attemptId: String, val json: String)
 
 @Entity(tableName = "cached_progress")
 data class CachedProgressEntity(@PrimaryKey val userId: Int, val json: String, val updatedAt: Long)
