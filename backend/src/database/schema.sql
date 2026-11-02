@@ -1,3 +1,14 @@
+-- ==========================================================
+-- SNAPSHOT DEL ESQUEMA ACTUAL
+-- SOLO PARA CREAR/RESETEAR BASES DE DESARROLLO LOCAL
+--
+-- NO ejecutar este archivo sobre producción.
+--
+-- La evolución de bases existentes se realiza mediante:
+--   src/database/migrations/
+--   pnpm db:migrate
+-- ==========================================================
+
 -- =========================
 -- LIMPIEZA DE TABLAS EXISTENTES
 -- SOLO PARA DESARROLLO LOCAL
@@ -64,7 +75,16 @@ CREATE TABLE missions (
   points_reward INTEGER DEFAULT 0,
   -- Que minijuego es: multiple_choice, matching, true_false, word_search.
   -- La app lo usa para saber que pantalla abrir, antes lo adivinaba por order_index.
-  mechanic VARCHAR(50) NOT NULL DEFAULT 'multiple_choice',
+  mechanic VARCHAR(50) NOT NULL DEFAULT 'multiple_choice'
+    CONSTRAINT missions_mechanic_check
+    CHECK (
+      mechanic IN (
+        'multiple_choice',
+        'matching',
+        'true_false',
+        'word_search'
+      )
+    ),
   time_limit_seconds INTEGER,
   -- Plumas disponibles. Cada error gasta una; al quedarse sin plumas se pierde
   -- la mision. Vive acá para que el servidor y la app no se desincronicen.
@@ -77,7 +97,17 @@ CREATE TABLE questions (
   id SERIAL PRIMARY KEY,
   mission_id INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
   question_text TEXT NOT NULL,
-  question_type VARCHAR(50) DEFAULT 'multiple_choice',
+
+  question_type VARCHAR(50) DEFAULT 'multiple_choice'
+    CONSTRAINT questions_type_check
+    CHECK (
+      question_type IN (
+        'multiple_choice',
+        'matching',
+        'true_false'
+      )
+    ),
+
   feedback TEXT,
   order_index INTEGER NOT NULL,
   points INTEGER DEFAULT 1,
@@ -119,15 +149,22 @@ CREATE TABLE mission_attempts (
   correct_answers INTEGER DEFAULT 0,
   wrong_answers INTEGER DEFAULT 0,
   points_earned INTEGER DEFAULT 0,
-  -- Semillas gastadas en potenciadores durante el intento (hoy, el "+30 s").
-  -- Las semillas de la cuenta son points_earned - seeds_spent.
   seeds_spent INTEGER NOT NULL DEFAULT 0,
   is_review BOOLEAN DEFAULT FALSE,
   started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   finished_at TIMESTAMP,
-  -- in_progress, completed, failed o abandoned (quedó abierto y se empezó otro).
-  status VARCHAR(50) DEFAULT 'in_progress',
-  -- Id que genera el teléfono en los intentos jugados sin conexión (modo offline).
+
+  status VARCHAR(50) DEFAULT 'in_progress'
+    CONSTRAINT mission_attempts_status_check
+    CHECK (
+      status IN (
+        'in_progress',
+        'completed',
+        'failed',
+        'abandoned'
+      )
+    ),
+
   client_attempt_id UUID UNIQUE
 );
 
@@ -148,7 +185,17 @@ CREATE TABLE level_progress (
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   level_id INTEGER NOT NULL REFERENCES educational_levels(id) ON DELETE CASCADE,
   progress_percentage NUMERIC(5,2) DEFAULT 0,
-  status VARCHAR(50) DEFAULT 'locked',
+
+  status VARCHAR(50) DEFAULT 'locked'
+    CONSTRAINT level_progress_status_check
+    CHECK (
+      status IN (
+        'locked',
+        'in_progress',
+        'completed'
+      )
+    ),
+
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(user_id, level_id)
 );
