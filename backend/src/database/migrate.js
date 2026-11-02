@@ -105,7 +105,13 @@ async function runMigrations() {
   }
 }
 
-runMigrations().catch((error) => {
-  console.error("[migrate] Error ejecutando migraciones:", error);
-  process.exit(1);
-});
+if (require.main === module) {
+  runMigrations().catch((error) => {
+    console.error("[migrate] Error ejecutando migraciones:", error);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = {
+  runMigrations
+};
