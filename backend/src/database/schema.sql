@@ -6,14 +6,12 @@
 --
 -- La evolución de bases existentes se realiza mediante:
 --   src/database/migrations/
---   pnpm db:migrate
+--   npm run db:migrate
 -- ==========================================================
-
 -- =========================
 -- LIMPIEZA DE TABLAS EXISTENTES
 -- SOLO PARA DESARROLLO LOCAL
 -- =========================
-
 DROP TABLE IF EXISTS student_group_enrollments CASCADE;
 DROP TABLE IF EXISTS group_access_codes CASCADE;
 DROP TABLE IF EXISTS class_groups CASCADE;
@@ -29,16 +27,13 @@ DROP TABLE IF EXISTS missions CASCADE;
 DROP TABLE IF EXISTS educational_levels CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
-
 -- =========================
 -- ROLES Y USUARIOS
 -- =========================
-
 CREATE TABLE roles (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) UNIQUE NOT NULL
 );
-
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   full_name VARCHAR(150) NOT NULL,
@@ -48,23 +43,20 @@ CREATE TABLE users (
   role_id INTEGER NOT NULL REFERENCES roles(id),
   center_id INTEGER,
   created_by INTEGER REFERENCES users(id),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   is_active BOOLEAN DEFAULT TRUE
 );
-
 -- =========================
 -- CONTENIDO EDUCATIVO
 -- =========================
-
 CREATE TABLE educational_levels (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   code VARCHAR(50) UNIQUE NOT NULL,
   description TEXT,
   order_index INTEGER NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-
 CREATE TABLE missions (
   id SERIAL PRIMARY KEY,
   level_id INTEGER NOT NULL REFERENCES educational_levels(id) ON DELETE CASCADE,
@@ -75,45 +67,37 @@ CREATE TABLE missions (
   points_reward INTEGER DEFAULT 0,
   -- Que minijuego es: multiple_choice, matching, true_false, word_search.
   -- La app lo usa para saber que pantalla abrir, antes lo adivinaba por order_index.
-  mechanic VARCHAR(50) NOT NULL DEFAULT 'multiple_choice'
-    CONSTRAINT missions_mechanic_check
-    CHECK (
-      mechanic IN (
-        'multiple_choice',
-        'matching',
-        'true_false',
-        'word_search'
-      )
-    ),
+  mechanic VARCHAR(50) NOT NULL DEFAULT 'multiple_choice' CONSTRAINT missions_mechanic_check CHECK (
+    mechanic IN (
+      'multiple_choice',
+      'matching',
+      'true_false',
+      'word_search'
+    )
+  ),
   time_limit_seconds INTEGER,
   -- Plumas disponibles. Cada error gasta una; al quedarse sin plumas se pierde
   -- la mision. Vive acá para que el servidor y la app no se desincronicen.
   max_plumas INTEGER NOT NULL DEFAULT 3,
   is_published BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-
 CREATE TABLE questions (
   id SERIAL PRIMARY KEY,
   mission_id INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
   question_text TEXT NOT NULL,
-
-  question_type VARCHAR(50) DEFAULT 'multiple_choice'
-    CONSTRAINT questions_type_check
-    CHECK (
-      question_type IN (
-        'multiple_choice',
-        'matching',
-        'true_false'
-      )
-    ),
-
+  question_type VARCHAR(50) DEFAULT 'multiple_choice' CONSTRAINT questions_type_check CHECK (
+    question_type IN (
+      'multiple_choice',
+      'matching',
+      'true_false'
+    )
+  ),
   feedback TEXT,
   order_index INTEGER NOT NULL,
   points INTEGER DEFAULT 1,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-
 CREATE TABLE answer_options (
   id SERIAL PRIMARY KEY,
   question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
@@ -122,7 +106,6 @@ CREATE TABLE answer_options (
   feedback TEXT,
   order_index INTEGER NOT NULL
 );
-
 -- Pares del minijuego de relacion de conceptos (Igualdad -> Mismos derechos).
 -- No caben en answer_options porque ahi no existe la nocion de par.
 CREATE TABLE question_pairs (
@@ -132,11 +115,9 @@ CREATE TABLE question_pairs (
   match_text TEXT NOT NULL,
   order_index INTEGER NOT NULL
 );
-
 -- =========================
 -- PROGRESO DEL ESTUDIANTE
 -- =========================
-
 -- Se guarda un intento por cada vez que el estudiante juega la mision.
 -- Los reintentos no borran ni pisan al anterior: los que llegan despues de
 -- haberla completado quedan marcados como repaso (is_review) y solo suman
@@ -151,23 +132,18 @@ CREATE TABLE mission_attempts (
   points_earned INTEGER DEFAULT 0,
   seeds_spent INTEGER NOT NULL DEFAULT 0,
   is_review BOOLEAN DEFAULT FALSE,
-  started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  finished_at TIMESTAMP,
-
-  status VARCHAR(50) DEFAULT 'in_progress'
-    CONSTRAINT mission_attempts_status_check
-    CHECK (
-      status IN (
-        'in_progress',
-        'completed',
-        'failed',
-        'abandoned'
-      )
-    ),
-
+  started_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  finished_at TIMESTAMPTZ,
+  status VARCHAR(50) DEFAULT 'in_progress' CONSTRAINT mission_attempts_status_check CHECK (
+    status IN (
+      'in_progress',
+      'completed',
+      'failed',
+      'abandoned'
+    )
+  ),
   client_attempt_id UUID UNIQUE
 );
-
 CREATE TABLE attempt_answers (
   id SERIAL PRIMARY KEY,
   attempt_id INTEGER NOT NULL REFERENCES mission_attempts(id) ON DELETE CASCADE,
@@ -177,38 +153,30 @@ CREATE TABLE attempt_answers (
   selected_option_id INTEGER REFERENCES answer_options(id),
   pair_id INTEGER REFERENCES question_pairs(id),
   is_correct BOOLEAN DEFAULT FALSE,
-  answered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  answered_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-
 CREATE TABLE level_progress (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   level_id INTEGER NOT NULL REFERENCES educational_levels(id) ON DELETE CASCADE,
-  progress_percentage NUMERIC(5,2) DEFAULT 0,
-
-  status VARCHAR(50) DEFAULT 'locked'
-    CONSTRAINT level_progress_status_check
-    CHECK (
-      status IN (
-        'locked',
-        'in_progress',
-        'completed'
-      )
-    ),
-
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  progress_percentage NUMERIC(5, 2) DEFAULT 0,
+  status VARCHAR(50) DEFAULT 'locked' CONSTRAINT level_progress_status_check CHECK (
+    status IN (
+      'locked',
+      'in_progress',
+      'completed'
+    )
+  ),
+  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(user_id, level_id)
 );
-
 -- =========================
 -- CENTROS, GRUPOS Y CÓDIGOS DE ACCESO
 -- =========================
-
 CREATE TABLE institution_types (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) UNIQUE NOT NULL
 );
-
 CREATE TABLE educational_centers (
   id SERIAL PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
@@ -216,14 +184,11 @@ CREATE TABLE educational_centers (
   department VARCHAR(100),
   municipality VARCHAR(100),
   is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-
 -- FK de users.center_id (se agrega acá porque users se crea antes que esta tabla)
 ALTER TABLE users
-  ADD CONSTRAINT users_center_id_fkey
-  FOREIGN KEY (center_id) REFERENCES educational_centers(id);
-
+ADD CONSTRAINT users_center_id_fkey FOREIGN KEY (center_id) REFERENCES educational_centers(id);
 CREATE TABLE class_groups (
   id SERIAL PRIMARY KEY,
   center_id INTEGER REFERENCES educational_centers(id),
@@ -232,32 +197,30 @@ CREATE TABLE class_groups (
   grade VARCHAR(50) NOT NULL,
   section VARCHAR(20),
   school_year INTEGER NOT NULL,
-  teacher_id INTEGER REFERENCES users(id), -- un profesor por sala
+  teacher_id INTEGER REFERENCES users(id),
+  -- un profesor por sala
   is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (teacher_id, school_year)
 );
-
 CREATE TABLE group_access_codes (
   id SERIAL PRIMARY KEY,
   group_id INTEGER NOT NULL REFERENCES class_groups(id) ON DELETE CASCADE,
   code VARCHAR(30) UNIQUE NOT NULL,
-  expires_at TIMESTAMP,
+  expires_at TIMESTAMPTZ,
   max_uses INTEGER,
   current_uses INTEGER DEFAULT 0,
   is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-
 CREATE TABLE student_group_enrollments (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   group_id INTEGER NOT NULL REFERENCES class_groups(id) ON DELETE CASCADE,
-  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  joined_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   is_active BOOLEAN DEFAULT TRUE,
   UNIQUE(user_id, group_id)
 );
-
 -- Índices de las consultas por estudiante, por intento y por sala.
 CREATE INDEX idx_mission_attempts_user ON mission_attempts(user_id);
 CREATE INDEX idx_attempt_answers_attempt ON attempt_answers(attempt_id);

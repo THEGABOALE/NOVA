@@ -35,7 +35,8 @@ describe("countPaidReviewsNear", () => {
     await countPaidReviewsNear(db, 2, 1, 24);
 
     expect(db.calls[0].params[3]).toBeNull();
-    expect(db.calls[0].sql).toContain("LOCALTIMESTAMP");
+    expect(db.calls[0].sql).toMatch(/\bCURRENT_TIMESTAMP\b/);
+    expect(db.calls[0].sql).not.toMatch(/\bLOCALTIMESTAMP\b/);
   });
 
   test("la ventana mira hacia antes y hacia después de esa hora", async () => {
@@ -68,7 +69,7 @@ describe("findSeedBalance", () => {
     await findSeedBalance(db, 7, new Date("2026-10-02T15:00:00.000Z"));
 
     expect(db.calls[0].params).toEqual([7, "2026-10-02T15:00:00.000Z"]);
-    expect(db.calls[0].sql).toContain("finished_at <= $2::timestamptz AT TIME ZONE current_setting('TimeZone')");
+    expect(db.calls[0].sql).toContain("finished_at <= $2::timestamptz");
   });
 });
 
