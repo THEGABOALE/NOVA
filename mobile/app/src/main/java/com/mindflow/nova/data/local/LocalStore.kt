@@ -20,10 +20,14 @@ interface LocalStore {
     suspend fun saveLevels(userId: Int, levels: List<LevelResponse>)
     suspend fun levels(userId: Int): List<LevelResponse>?
 
-    suspend fun saveMission(content: MissionContent)
-    suspend fun mission(missionId: Int): MissionContent?
+    suspend fun saveMission(userId: Int, content: MissionContent)
+    suspend fun mission(userId: Int, missionId: Int): MissionContent?
     /** Cuándo se guardó la misión (epoch ms), o null si no está. */
-    suspend fun missionSavedAt(missionId: Int): Long?
+    suspend fun missionSavedAt(userId: Int, missionId: Int): Long?
+
+    suspend fun saveActiveLesson(userId: Int, attemptId: String, content: MissionContent)
+    suspend fun activeLesson(userId: Int, attemptId: String): MissionContent?
+    suspend fun clearActiveLessons(userId: Int)
 
     suspend fun saveProgress(userId: Int, progress: StudentProgress)
     suspend fun progress(userId: Int): StudentProgress?

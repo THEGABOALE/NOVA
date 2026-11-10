@@ -21,6 +21,8 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface NovaApiService {
+    @GET("api/teacher/me/students")
+    suspend fun getTeacherRooms(@Header("Authorization") authorization: String): Response<com.mindflow.nova.data.model.TeacherRoomsResponse>
     @GET("/")
     suspend fun getHealth(): Response<HealthResponse>
     @GET("api/health/db")
@@ -33,7 +35,10 @@ interface NovaApiService {
 
     /** Contenido jugable de una misión: preguntas con sus opciones o pares. */
     @GET("api/missions/{missionId}")
-    suspend fun getMissionContent(@Path("missionId") missionId: Int): Response<MissionContentResponse>
+    suspend fun getMissionContent(
+        @Path("missionId") missionId: Int,
+        @Header("Authorization") authorization: String? = null
+    ): Response<MissionContentResponse>
 
     /**
      * Sube intentos jugados en el teléfono: el servidor los vuelve a calificar

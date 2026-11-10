@@ -35,13 +35,21 @@ class RoomLocalStore(
     override suspend fun levels(userId: Int): List<LevelResponse>? =
         dao.levels(userId)?.let { gson.fromJson(it.json, levelsType) }
 
-    override suspend fun saveMission(content: MissionContent) =
-        dao.upsertMission(CachedMissionEntity(content.id, gson.toJson(content), now()))
+    override suspend fun saveMission(userId: Int, content: MissionContent) =
+        dao.upsertMission(CachedMissionEntity(userId, content.id, gson.toJson(content), now()))
 
-    override suspend fun mission(missionId: Int): MissionContent? =
-        dao.mission(missionId)?.let { gson.fromJson(it.json, MissionContent::class.java) }
+    override suspend fun mission(userId: Int, missionId: Int): MissionContent? =
+        dao.mission(userId, missionId)?.let { gson.fromJson(it.json, MissionContent::class.java) }
 
-    override suspend fun missionSavedAt(missionId: Int): Long? = dao.mission(missionId)?.updatedAt
+    override suspend fun missionSavedAt(userId: Int, missionId: Int): Long? = dao.mission(userId, missionId)?.updatedAt
+
+    override suspend fun saveActiveLesson(userId: Int, attemptId: String, content: MissionContent) =
+        dao.upsertActiveLesson(ActiveLessonEntity(userId, attemptId, gson.toJson(content)))
+
+    override suspend fun activeLesson(userId: Int, attemptId: String): MissionContent? =
+        dao.activeLesson(userId, attemptId)?.let { gson.fromJson(it.json, MissionContent::class.java) }
+
+    override suspend fun clearActiveLessons(userId: Int) = dao.deleteActiveLessons(userId)
 
     override suspend fun saveProgress(userId: Int, progress: StudentProgress) =
         dao.upsertProgress(CachedProgressEntity(userId, gson.toJson(progress), now()))
@@ -88,9 +96,7 @@ class RoomLocalStore(
     override suspend fun removeNotice(clientAttemptId: String) = dao.deleteNotice(clientAttemptId)
 
     override suspend fun clearAccount(userId: Int) {
-        dao.deleteUser(userId)
-        dao.deleteLevels(userId)
-        dao.deleteProgress(userId)
+        dao.clearAccount(userId)
     }
 
     private fun toPending(entity: PendingAttemptEntity) = PendingAttempt(

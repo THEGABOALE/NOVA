@@ -11,10 +11,11 @@ import androidx.sqlite.execSQL
 @Database(
     entities = [
         CachedUserEntity::class, CachedLevelsEntity::class, CachedMissionEntity::class,
-        CachedProgressEntity::class, PendingAttemptEntity::class, RejectedNoticeEntity::class
+        CachedProgressEntity::class, PendingAttemptEntity::class, RejectedNoticeEntity::class,
+        ActiveLessonEntity::class
     ],
-    version = 3,
-    exportSchema = false
+    version = 4,
+    exportSchema = true
 )
 abstract class NovaDatabase : RoomDatabase() {
     abstract fun dao(): NovaDao
@@ -45,9 +46,18 @@ abstract class NovaDatabase : RoomDatabase() {
             }
         }
 
+        /** La caché antigua no tiene dueño verificable: se descarta, nunca se reasigna. */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(connection: SQLiteConnection) {
+                connection.execSQL("DROP TABLE `cached_mission`")
+                connection.execSQL("CREATE TABLE `cached_mission` (`userId` INTEGER NOT NULL, `missionId` INTEGER NOT NULL, `json` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`userId`, `missionId`))")
+                connection.execSQL("CREATE TABLE `active_lesson` (`userId` INTEGER NOT NULL, `attemptId` TEXT NOT NULL, `json` TEXT NOT NULL, PRIMARY KEY(`userId`, `attemptId`))")
+            }
+        }
+
         fun create(context: Context): NovaDatabase =
             Room.databaseBuilder(context, NovaDatabase::class.java, NAME)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
     }
 }

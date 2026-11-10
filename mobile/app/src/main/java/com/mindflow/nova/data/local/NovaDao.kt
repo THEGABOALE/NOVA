@@ -15,7 +15,14 @@ interface NovaDao {
     @Query("SELECT * FROM cached_levels WHERE userId = :userId") suspend fun levels(userId: Int): CachedLevelsEntity?
 
     @Upsert suspend fun upsertMission(entity: CachedMissionEntity)
-    @Query("SELECT * FROM cached_mission WHERE missionId = :missionId") suspend fun mission(missionId: Int): CachedMissionEntity?
+    @Query("SELECT * FROM cached_mission WHERE userId = :userId AND missionId = :missionId")
+    suspend fun mission(userId: Int, missionId: Int): CachedMissionEntity?
+    @Query("DELETE FROM cached_mission WHERE userId = :userId") suspend fun deleteMissions(userId: Int)
+
+    @Upsert suspend fun upsertActiveLesson(entity: ActiveLessonEntity)
+    @Query("SELECT * FROM active_lesson WHERE userId = :userId AND attemptId = :attemptId")
+    suspend fun activeLesson(userId: Int, attemptId: String): ActiveLessonEntity?
+    @Query("DELETE FROM active_lesson WHERE userId = :userId") suspend fun deleteActiveLessons(userId: Int)
 
     @Upsert suspend fun upsertProgress(entity: CachedProgressEntity)
     @Query("SELECT * FROM cached_progress WHERE userId = :userId") suspend fun progress(userId: Int): CachedProgressEntity?
@@ -44,4 +51,13 @@ interface NovaDao {
     @Query("DELETE FROM cached_user WHERE userId = :userId") suspend fun deleteUser(userId: Int)
     @Query("DELETE FROM cached_levels WHERE userId = :userId") suspend fun deleteLevels(userId: Int)
     @Query("DELETE FROM cached_progress WHERE userId = :userId") suspend fun deleteProgress(userId: Int)
+
+    @Transaction
+    suspend fun clearAccount(userId: Int) {
+        deleteUser(userId)
+        deleteLevels(userId)
+        deleteProgress(userId)
+        deleteMissions(userId)
+        deleteActiveLessons(userId)
+    }
 }
