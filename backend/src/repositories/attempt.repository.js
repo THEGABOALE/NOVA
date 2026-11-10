@@ -51,7 +51,10 @@ const countPaidReviewsNear = async (db, userId, missionId, hours, at = null) => 
   const result = await db.query(
     `
     WITH ref AS (
-      SELECT COALESCE($4::timestamptz AT TIME ZONE current_setting('TimeZone'), LOCALTIMESTAMP) AS t
+      SELECT COALESCE(
+        $4::timestamptz,
+        CURRENT_TIMESTAMP
+      ) AS t
     )
     SELECT COUNT(*)::int AS paid
     FROM mission_attempts, ref
@@ -79,7 +82,7 @@ const findAttemptWithMission = async (db, attemptId) => {
   const result = await db.query(
     `
     SELECT a.id, a.user_id, a.mission_id, a.is_review, a.status,
-           EXTRACT(EPOCH FROM (LOCALTIMESTAMP - a.started_at)) AS elapsed_seconds,
+           EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - a.started_at)) AS elapsed_seconds,
            m.level_id, m.points_reward, m.max_plumas, m.time_limit_seconds
     FROM mission_attempts a
     JOIN missions m ON m.id = a.mission_id
@@ -126,8 +129,8 @@ const insertSettledAttempt = async (db, {
     )
     VALUES (
       $1, $2, $3,
-      $4::timestamptz AT TIME ZONE current_setting('TimeZone'),
-      $5::timestamptz AT TIME ZONE current_setting('TimeZone'),
+      $4::timestamptz,
+      $5::timestamptz,
       $6, $7, $8, $9, $10, $11, $12
     )
     RETURNING id;
@@ -186,8 +189,7 @@ const findActivityDays = async (db, userId, tzOffsetMinutes) => {
   const result = await db.query(
     `
     SELECT to_char(
-             ((finished_at AT TIME ZONE current_setting('TimeZone')) AT TIME ZONE 'UTC')
-               + make_interval(mins => $2),
+             (finished_at AT TIME ZONE 'UTC') + make_interval(mins => $2),
              'YYYY-MM-DD'
            ) AS day,
            COUNT(*) AS attempts
@@ -229,7 +231,7 @@ const findSeedBalance = async (db, userId, at = null) => {
     SELECT COALESCE(SUM(points_earned - seeds_spent), 0) AS balance
     FROM mission_attempts
     WHERE user_id = $1
-      AND ($2::timestamptz IS NULL OR finished_at <= $2::timestamptz AT TIME ZONE current_setting('TimeZone'));
+      AND ($2::timestamptz IS NULL or finished_at <= $2::timestamptz)
     `,
     [userId, at ? at.toISOString() : null]
   );

@@ -28,13 +28,18 @@ describe("loadStreak", () => {
     expect(db.calls).toEqual([[7, -360]]);
   });
 
-  test("no asume que la base corre en UTC: convierte finished_at con el huso de la sesion", async () => {
+  test("calcula el dia del estudiante sin depender del huso de la base", async () => {
     const db = fakeDb([]);
 
     await loadStreak(db, 7, 0, NOW);
 
-    expect(db.queries[0]).toContain("AT TIME ZONE current_setting('TimeZone')");
-    expect(db.queries[0]).toContain("AT TIME ZONE 'UTC'");
+    expect(db.queries[0]).toMatch(
+      /finished_at\s+AT\s+TIME\s+ZONE\s+'UTC'/
+    );
+
+    expect(db.queries[0]).not.toMatch(
+      /current_setting\s*\(\s*'TimeZone'\s*\)/
+    );
   });
 
   test("sin intentos terminados: racha en 0 y ningun intento hoy", async () => {
