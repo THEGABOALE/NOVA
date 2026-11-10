@@ -1,14 +1,31 @@
 const { Pool } = require("pg");
 const env = require("../config/env");
 
-// Con DATABASE_URL (Neon, Railway) la conexion va cifrada y se verifica el
-// certificado del servidor, para que nadie en el camino pueda hacerse pasar
-// por la base. Sin ella asumimos Postgres local de desarrollo y no se fuerza
-// SSL.
+const isRailwayPrivateConnection = (connectionString) => {
+  if (!connectionString) {
+    return false;
+  }
+
+  try {
+    const { hostname } = new URL(connectionString);
+    return hostname.endsWith(".railway.internal");
+  } catch {
+    return false;
+  }
+};
+
 const pool = env.db.connectionString
   ? new Pool({
       connectionString: env.db.connectionString,
-      ssl: { rejectUnauthorized: true }
+
+      // Railway ya cifra el tráfico entre servicios mediante su red privada
+      // (WireGuard), por lo que no necesitamos TLS de PostgreSQL dentro de
+      // *.railway.internal.
+      //
+      // Para proveedores externos seguimos verificando el certificado TLS.
+      ssl: isRailwayPrivateConnection(env.db.connectionString)
+        ? false
+        : { rejectUnauthorized: true }
     })
   : new Pool({
       host: env.db.host,
